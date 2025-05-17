@@ -53,11 +53,12 @@ async def app_lifespan(server: FastMCP) -> AsyncIterator[AppContext]:
         logger.info("Shutting down API connection")
 
 # Configure MCP server with lifespan
-# ログレベルの設定は行わず、デフォルト値を使用
+# 明示的に大文字でログレベルを指定
 mcp = FastMCP(
     name="Ticket Management System",
     lifespan=app_lifespan,
-    description="チケット管理システム - 各種チケット操作を実行するためのMCPサーバー"
+    description="チケット管理システム - 各種チケット操作を実行するためのMCPサーバー",
+    log_level="INFO"  # 大文字のリテラルで直接指定
 )
 
 # === Tools ===
