@@ -27,3 +27,8 @@ Thumbs.db
 # エディタ/IDE設定ファイル
 .vscode/
 .idea/
+
+.env
+api/node_modules/
+api/build/
+aip/.env

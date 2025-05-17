@@ -25,21 +25,16 @@ services:
       dockerfile: Dockerfile
     container_name: api-functions-new
     restart: always
+    env_file:
+      - ./.env
     environment:
-      DB_HOST: db
-      DB_PORT: 5432
-      DB_NAME: mcp_ux
-      DB_USER: postgres
-      DB_PASSWORD: postgres
-      DB_SCHEMA: mcp_ux
       NODE_ENV: development
       LOG_LEVEL: info
     ports:
       - "8080:8080"
     volumes:
-      - ./api/src:/app/src
-      - ./api/package.json:/app/package.json
-      - ./api/tsconfig.json:/app/tsconfig.json
+      - ./api:/app
+      - ./.env:/app/.env
       - /app/node_modules
       - /app/build
     depends_on:

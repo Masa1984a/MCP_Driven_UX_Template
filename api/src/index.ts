@@ -2,6 +2,10 @@ import express from 'express';
 import { Pool } from 'pg';
 import { logger } from './utils/logger';
 import { ticketRoutes } from './routes/ticketRoutes';
+import dotenv from 'dotenv';
+
+// Load environment variables from .env file
+dotenv.config({ path: './.env' });
 
 // Create Express app
 const app = express();

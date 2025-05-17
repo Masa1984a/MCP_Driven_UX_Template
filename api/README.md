@@ -39,7 +39,13 @@ This is a TypeScript-based API service using Google's Functions Framework, desig
 ### Getting Started
 
 1. Clone the repository
-2. Run the application:
+2. Copy `.env.sample` to `.env` in the project root directory and update the values if needed:
+
+```bash
+cp .env.sample .env
+```
+
+3. Run the application:
 
 ```bash
 docker-compose up
@@ -52,6 +58,7 @@ The API will be available at http://localhost:8080
 ```bash
 cd api
 npm install
+# Make sure .env file exists in the project root directory
 npm run dev
 ```
 
@@ -78,6 +85,21 @@ Query Parameters:
 
 Health check endpoint to verify the API is running.
 
+## Environment Variables
+
+The application uses the following environment variables:
+
+| Variable     | Description                 | Default Value |
+|--------------|-----------------------------|--------------:|
+| DB_HOST      | Database host               | db            |
+| DB_PORT      | Database port               | 5432          |
+| DB_NAME      | Database name               | mcp_ux        |
+| DB_USER      | Database username           | postgres      |
+| DB_PASSWORD  | Database password           | postgres      |
+| PORT         | API server port             | 8080          |
+
+**Important**: Never commit your `.env` file to version control. It contains sensitive credentials.
+
 ## Deployment to GCP
 
 This application can be deployed to Google Cloud Platform using:
@@ -87,3 +109,5 @@ This application can be deployed to Google Cloud Platform using:
 3. Cloud Functions v2 (container mode)
 
 For database connectivity in production, use Cloud SQL for PostgreSQL with Cloud SQL Auth Proxy or Cloud SQL Python Connector.
+
+In production environments, set environment variables through your deployment platform rather than using `.env` files.
