@@ -13,6 +13,9 @@ build/
 .venv/
 venv/
 ENV/
+mcp_server/.venv/
+mcp_server/venv/
+mcp_server/ENV/
 
 # 秘密鍵ファイル (ファイル名を固定している場合)
 firebase-credentials.json
