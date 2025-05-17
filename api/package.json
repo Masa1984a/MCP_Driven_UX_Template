@@ -1,0 +1,35 @@
+{
+  "name": "api-functions",
+  "version": "1.0.0",
+  "description": "API functions with TypeScript and Functions Framework",
+  "main": "build/src/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node build/src/index.js",
+    "dev": "concurrently \"npm run build:watch\" \"npm run start:watch\"",
+    "build:watch": "tsc --watch",
+    "start:watch": "nodemon --watch build/ --exec \"npm run start\"",
+    "lint": "eslint 'src/**/*.ts'",
+    "test": "jest"
+  },
+  "dependencies": {
+    "@google-cloud/functions-framework": "^3.3.0",
+    "express": "^4.18.2",
+    "pg": "^8.11.3",
+    "winston": "^3.11.0"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/jest": "^29.5.10",
+    "@types/node": "^20.9.4",
+    "@types/pg": "^8.10.9",
+    "@typescript-eslint/eslint-plugin": "^6.12.0",
+    "@typescript-eslint/parser": "^6.12.0",
+    "concurrently": "^8.2.2",
+    "eslint": "^8.54.0",
+    "jest": "^29.7.0",
+    "nodemon": "^3.0.1",
+    "ts-jest": "^29.1.1",
+    "typescript": "^5.3.2"
+  }
+}

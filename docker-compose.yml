@@ -1,0 +1,56 @@
+# Docker Compose configuration
+
+services:
+  # PostgreSQLサービス
+  db:
+    image: postgres:16
+    container_name: postgres-db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: mcp_ux
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./db/init:/docker-entrypoint-initdb.d
+    networks:
+      - app-network
+  
+  # APIサービス
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    container_name: api-functions-new
+    restart: always
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: mcp_ux
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_SCHEMA: mcp_ux
+      NODE_ENV: development
+      LOG_LEVEL: info
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./api/src:/app/src
+      - ./api/package.json:/app/package.json
+      - ./api/tsconfig.json:/app/tsconfig.json
+      - /app/node_modules
+      - /app/build
+    depends_on:
+      - db
+    networks:
+      - app-network
+
+volumes:
+  postgres_data:
+    name: postgres_data
+
+networks:
+  app-network:
+    driver: bridge
