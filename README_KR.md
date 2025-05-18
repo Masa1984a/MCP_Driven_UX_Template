@@ -99,6 +99,7 @@ Model Context Protocol(MCP)을 활용하여, 티켓 관리 시스템을 샘플�
 ### 사전 요구사항
 
 - Docker 또는 Podman (권장)
+- docker-compose 또는 podman-compose
 - Python 3.9 이상 (MCP 서버용)
 - Node.js 18 이상 (API 서버용)
 - Claude Desktop (MCP 클라이언트)

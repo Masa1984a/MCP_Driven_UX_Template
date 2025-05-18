@@ -99,6 +99,7 @@
 ### 先决条件
 
 - Docker 或 Podman（推荐）
+- docker-compose 或 podman-compose
 - Python 3.9 以上（用于 MCP 服务器）
 - Node.js 18 以上（用于 API 服务器）
 - Claude Desktop（MCP 客户端）

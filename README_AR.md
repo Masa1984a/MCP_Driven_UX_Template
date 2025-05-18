@@ -101,6 +101,7 @@
 ### المتطلبات الأساسية
 
 - Docker أو Podman (موصى به)
+- docker-compose أو podman-compose
 - Python 3.9+ (لخادم MCP)
 - Node.js 18+ (لخادم API)
 - Claude Desktop (عميل MCP)

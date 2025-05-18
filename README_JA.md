@@ -99,6 +99,7 @@ Model Context Protocol（MCP）を活用し、チケット管理システムを�
 ### 前提条件
 
 - Docker または Podman（推奨）
+- docker-compose または podman-compose
 - Python 3.9以上（MCP サーバー用）
 - Node.js 18以上（API サーバー用）
 - Claude Desktop（MCP クライアント）

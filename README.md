@@ -99,6 +99,7 @@ This repository implements a ticket management system as an example template to 
 ### Prerequisites
 
 - Docker or Podman (recommended)
+- docker-compose or podman-compose
 - Python 3.9+ (for MCP server)
 - Node.js 18+ (for API server)
 - Claude Desktop (MCP client)
