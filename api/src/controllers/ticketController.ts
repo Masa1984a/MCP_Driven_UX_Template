@@ -382,7 +382,7 @@ export const createTicket = async (req: Request, res: Response) => {
       ticketId, 
       personInChargeId, 
       person_in_charge_name, 
-      '新規チケット作成'
+      'Create New Ticket.'
     ]);
     
     await client.query('COMMIT');
@@ -558,7 +558,7 @@ export const updateTicket = async (req: Request, res: Response) => {
       ticketId, 
       updatedById, 
       updated_by_name, 
-      comment || 'チケットを更新しました'
+      comment || 'Ticket was updated.'
     ]);
     
     const historyId = historyResult.rows[0].id;

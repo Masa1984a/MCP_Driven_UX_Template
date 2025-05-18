@@ -1,5 +1,4 @@
 -- PostgreSQLデータベース初期化スクリプト
--- Firestoreモデルを元にしたRDBMSテーブル定義
 
 -- スキーマ作成
 CREATE SCHEMA IF NOT EXISTS mcp_ux;
@@ -9,7 +8,7 @@ SET search_path TO mcp_ux;
 
 -- ユーザーテーブル
 CREATE TABLE IF NOT EXISTS users (
-  id VARCHAR(50) PRIMARY KEY,  -- Firestoreのドキュメントidに相当
+  id VARCHAR(50) PRIMARY KEY,
   name VARCHAR(100) NOT NULL,
   email VARCHAR(100) NOT NULL,
   role VARCHAR(50) NOT NULL,
@@ -40,7 +39,7 @@ CREATE TABLE IF NOT EXISTS category_details (
   id VARCHAR(50) PRIMARY KEY,
   name VARCHAR(200) NOT NULL,
   category_id VARCHAR(50) NOT NULL REFERENCES categories(id),
-  category_name VARCHAR(100) NOT NULL,  -- 非正規化だがFirestoreの構造を踏襲
+  category_name VARCHAR(100) NOT NULL,
   order_no INTEGER NOT NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP

@@ -3,9 +3,9 @@ MCP Server for Ticket Management System
 This server connects Claude for desktop to the Ticket API service
 for ticket management operations.
 
-チケット管理システムのMCPサーバー
-このサーバーはClaudeデスクトップをチケットAPIサービスに接続し、
-チケット管理操作を実行します。
+MCP Server for Ticket Management System
+This server connects Claude desktop to the Ticket API service
+and performs ticket management operations.
 """
 import sys
 import os
@@ -53,17 +53,17 @@ async def app_lifespan(server: FastMCP) -> AsyncIterator[AppContext]:
         logger.info("Shutting down API connection")
 
 # Configure MCP server with lifespan
-# 明示的に大文字でログレベルを指定
+# Explicitly specify log level in uppercase
 mcp = FastMCP(
     name="Ticket Management System",
     lifespan=app_lifespan,
-    description="チケット管理システム - 各種チケット操作を実行するためのMCPサーバー",
-    log_level="INFO"  # 大文字のリテラルで直接指定
+    description="Ticket Management System - MCP server for executing various ticket operations",
+    log_level="INFO"  # Directly specified with uppercase literal
 )
 
 # === Tools ===
 
-@mcp.tool(description="チケット一覧を取得する - 検索条件に応じてチケットのリストを表示")
+@mcp.tool(description="Get ticket list - Display list of tickets according to search criteria")
 def get_ticket_list(
     personInChargeId: Optional[str] = None,
     accountId: Optional[str] = None,
@@ -79,29 +79,29 @@ def get_ticket_list(
     ctx: Context = None
 ) -> str:
     """
-    チケット一覧を検索条件に基づいて取得し、表形式で表示する
+    Retrieve a list of tickets based on search criteria and display in tabular format
 
     Parameters:
-    - personInChargeId: 担当者IDで絞り込み（指定がない場合は全担当者）
-    - accountId: アカウントIDで絞り込み（指定がない場合は全アカウント）
-    - statusId: ステータスIDで絞り込み（指定がない場合は全ステータス）
-    - scheduledCompletionDateFrom: 対応予定日の開始日（YYYY-MM-DD形式）
-    - scheduledCompletionDateTo: 対応予定日の終了日（YYYY-MM-DD形式）
-    - showCompleted: 完了済みのチケットを表示するかどうか（デフォルト: True）
-    - searchQuery: 検索キーワード（概要、アカウント名、リクエスタ名から検索）
-    - sortBy: 並び替えるフィールド（デフォルト: "receptionDateTime"）
-    - sortOrder: 並び替え順序（"asc" または "desc"、デフォルト: "desc"）
-    - limit: 取得する最大件数（デフォルト: 20）
-    - offset: 開始位置（ページネーション用、デフォルト: 0）
+    - personInChargeId: Filter by person in charge ID (all persons if not specified)
+    - accountId: Filter by account ID (all accounts if not specified)
+    - statusId: Filter by status ID (all statuses if not specified)
+    - scheduledCompletionDateFrom: Scheduled completion date start (YYYY-MM-DD format)
+    - scheduledCompletionDateTo: Scheduled completion date end (YYYY-MM-DD format)
+    - showCompleted: Whether to show completed tickets (default: True)
+    - searchQuery: Search keyword (searches in summary, account name, requestor name)
+    - sortBy: Field to sort by (default: "receptionDateTime")
+    - sortOrder: Sort order ("asc" or "desc", default: "desc")
+    - limit: Maximum number of results to return (default: 20)
+    - offset: Starting position (for pagination, default: 0)
 
     Returns:
-    - チケット一覧のMarkdown形式テーブル
+    - Ticket list in Markdown table format
 
-    使用例:
-    1. すべてのチケットを表示: get_ticket_list()
-    2. 特定担当者のチケット: get_ticket_list(personInChargeId="user1")
-    3. キーワード検索: get_ticket_list(searchQuery="エラー")
-    4. 日付範囲指定: get_ticket_list(scheduledCompletionDateFrom="2023-01-01", scheduledCompletionDateTo="2023-12-31")
+    Usage examples:
+    1. Display all tickets: get_ticket_list()
+    2. Tickets for a specific person in charge: get_ticket_list(personInChargeId="user1")
+    3. Keyword search: get_ticket_list(searchQuery="error")
+    4. Date range specification: get_ticket_list(scheduledCompletionDateFrom="2023-01-01", scheduledCompletionDateTo="2023-12-31")
     """
     # Get API base URL
     api_base_url = ctx.request_context.lifespan_context.api_base_url
@@ -134,14 +134,14 @@ def get_ticket_list(
         
         # Format as a table
         if not tickets:
-            return "対象のチケットは見つかりませんでした。"
+            return "No tickets found matching the criteria."
         
-        output = "# チケット一覧\n\n"
-        output += "| ID | 受付日時 | アカウント/リクエスタ | カテゴリ/詳細 | 概要 | 担当者 | ステータス | 対応予定日/残 |\n"
+        output = "# Ticket List\n\n"
+        output += "| ID | Reception Date | Account/Requestor | Category/Detail | Summary | Person in Charge | Status | Scheduled Date/Remaining |\n"
         output += "|---|---|---|---|---|---|---|---|\n"
         
         for t in tickets:
-            remaining = f"あと{t.get('remainingDays')}日" if t.get('remainingDays') is not None else ""
+            remaining = f"{t.get('remainingDays')} days left" if t.get('remainingDays') is not None else ""
             scheduled = f"{t.get('scheduledCompletionDate')} {remaining}" if t.get('scheduledCompletionDate') else ""
             
             output += f"| {t.get('ticketId')} | {t.get('receptionDateTime')} | {t.get('accountName')}/{t.get('requestorName')} | "
@@ -151,33 +151,33 @@ def get_ticket_list(
         return output
     
     except requests.exceptions.RequestException as e:
-        return f"APIリクエストエラー: {str(e)}"
+        return f"API request error: {str(e)}"
     except Exception as e:
-        return f"エラーが発生しました: {str(e)}"
+        return f"An error occurred: {str(e)}"
 
-@mcp.tool(description="チケットの詳細情報を取得する - 特定のチケットID指定で詳細表示")
+@mcp.tool(description="Get ticket details - Display detailed information for a specific ticket ID")
 def get_ticket_detail(
     ticketId: str,
     ctx: Context = None
 ) -> str:
     """
-    特定のチケットIDに基づいて、そのチケットの詳細情報を取得し表示する
+    Retrieve and display detailed information for a specific ticket based on its ID
 
     Parameters:
-    - ticketId: 表示対象のチケットID（例: "TCK-0001"）
+    - ticketId: ID of the ticket to display (e.g., "TCK-0001")
 
     Returns:
-    - チケット詳細情報のMarkdown形式レポート
-      - 受付内容（日時、アカウント、リクエスタ、カテゴリ、概要、詳細、添付ファイル）
-      - 対応内容（担当者、対応予定日、ステータス、完了日、実績工数、対応分類、対応内容詳細）
-      - 対応履歴（日時順のコメント履歴）
+    - Ticket details in Markdown format report
+      - Reception information (date/time, account, requestor, category, summary, description, attachments)
+      - Response information (person in charge, scheduled completion date, status, completion date, actual effort hours, response category, response details)
+      - History (chronological comment history)
 
-    使用例:
-    1. チケット詳細表示: get_ticket_detail(ticketId="TCK-0001")
+    Usage examples:
+    1. Display ticket details: get_ticket_detail(ticketId="TCK-0001")
 
-    備考:
-    - 存在しないチケットIDを指定した場合は、エラーメッセージを返します
-    - 対応履歴は新しい順に表示されます
+    Notes:
+    - Returns an error message if the specified ticket ID doesn't exist
+    - History is displayed in newest first order
     """
     # Get API base URL
     api_base_url = ctx.request_context.lifespan_context.api_base_url
@@ -198,75 +198,75 @@ def get_ticket_detail(
         history_entries = history_response.json()
         
         # Format as markdown
-        output = f"# チケット詳細: {ticket.get('id')}\n\n"
+        output = f"# Ticket Details: {ticket.get('id')}\n\n"
         
-        output += "## 受付内容\n\n"
-        output += f"- **受付日時**: {ticket.get('receptionDateTime', '未設定')}\n"
-        output += f"- **アカウント**: {ticket.get('accountName', '未設定')}\n"
-        output += f"- **リクエスタ**: {ticket.get('requestorName', '未設定')}\n"
-        output += f"- **カテゴリ**: {ticket.get('categoryName', '未設定')}\n"
-        output += f"- **カテゴリ詳細**: {ticket.get('categoryDetailName', '未設定')}\n"
-        output += f"- **受付チャネル**: {ticket.get('requestChannelName', '未設定')}\n"
-        output += f"- **概要**: {ticket.get('summary', '未設定')}\n"
-        output += f"- **詳細**:\n\n{ticket.get('description', '未設定')}\n\n"
+        output += "## Reception Information\n\n"
+        output += f"- **Reception Date/Time**: {ticket.get('receptionDateTime', 'Not set')}\n"
+        output += f"- **Account**: {ticket.get('accountName', 'Not set')}\n"
+        output += f"- **Requestor**: {ticket.get('requestorName', 'Not set')}\n"
+        output += f"- **Category**: {ticket.get('categoryName', 'Not set')}\n"
+        output += f"- **Category Detail**: {ticket.get('categoryDetailName', 'Not set')}\n"
+        output += f"- **Request Channel**: {ticket.get('requestChannelName', 'Not set')}\n"
+        output += f"- **Summary**: {ticket.get('summary', 'Not set')}\n"
+        output += f"- **Description**:\n\n{ticket.get('description', 'Not set')}\n\n"
         
         # Add attachments if any
         attachments = ticket.get('attachments', [])
         if attachments:
-            output += "- **添付ファイル**:\n"
+            output += "- **Attachments**:\n"
             for attachment in attachments:
-                file_name = attachment.get('fileName', '不明なファイル')
+                file_name = attachment.get('fileName', 'Unknown file')
                 file_url = attachment.get('fileUrl', '#')
                 output += f"  - [{file_name}]({file_url})\n"
         else:
-            output += "- **添付ファイル**: なし\n"
+            output += "- **Attachments**: None\n"
         
-        output += "\n## 対応内容\n\n"
-        output += f"- **担当者**: {ticket.get('personInChargeName', '未設定')}\n"
-        output += f"- **対応予定日**: {ticket.get('scheduledCompletionDate', '未設定')}\n"
-        output += f"- **ステータス**: {ticket.get('statusName', '未設定')}\n"
-        output += f"- **完了日**: {ticket.get('completionDate', '未完了')}\n"
-        output += f"- **実績工数**: {ticket.get('actualEffortHours', '未設定')} 時間\n"
-        output += f"- **対応分類**: {ticket.get('responseCategoryName', '未設定')}\n"
+        output += "\n## Response Information\n\n"
+        output += f"- **Person in Charge**: {ticket.get('personInChargeName', 'Not set')}\n"
+        output += f"- **Scheduled Completion Date**: {ticket.get('scheduledCompletionDate', 'Not set')}\n"
+        output += f"- **Status**: {ticket.get('statusName', 'Not set')}\n"
+        output += f"- **Completion Date**: {ticket.get('completionDate', 'Not completed')}\n"
+        output += f"- **Actual Effort Hours**: {ticket.get('actualEffortHours', 'Not set')} hours\n"
+        output += f"- **Response Category**: {ticket.get('responseCategoryName', 'Not set')}\n"
         
         response_details = ticket.get('responseDetails', '')
-        output += "- **対応内容詳細**:\n\n"
-        output += f"{response_details if response_details else '未設定'}\n\n"
+        output += "- **Response Details**:\n\n"
+        output += f"{response_details if response_details else 'Not set'}\n\n"
         
-        output += f"- **不具合有無**: {'あり' if ticket.get('hasDefect') else 'なし'}\n"
-        output += f"- **外部チケット**: {ticket.get('externalTicketId', '未設定')}\n"
-        output += f"- **備考**: {ticket.get('remarks', '未設定')}\n\n"
+        output += f"- **Has Defect**: {'Yes' if ticket.get('hasDefect') else 'No'}\n"
+        output += f"- **External Ticket**: {ticket.get('externalTicketId', 'Not set')}\n"
+        output += f"- **Remarks**: {ticket.get('remarks', 'Not set')}\n\n"
         
         # Add history
-        output += "## 対応履歴\n\n"
+        output += "## Response History\n\n"
         if history_entries:
             for entry in history_entries:
-                output += f"### {entry.get('timestamp')} - {entry.get('userName', '不明')}\n\n"
+                output += f"### {entry.get('timestamp')} - {entry.get('userName', 'Unknown')}\n\n"
                 output += f"{entry.get('comment', '')}\n\n"
                 
                 # Add changed fields if any
                 changed_fields = entry.get('changedFields', [])
                 if changed_fields:
-                    output += "変更内容:\n"
+                    output += "Changed fields:\n"
                     for field in changed_fields:
-                        field_name = field.get('fieldName', '不明')
+                        field_name = field.get('fieldName', 'Unknown')
                         old_value = field.get('oldValue', '')
                         new_value = field.get('newValue', '')
                         output += f"- {field_name}: {old_value} → {new_value}\n"
                     output += "\n"
         else:
-            output += "履歴はありません。\n"
+            output += "No history available.\n"
         
         return output
     
     except requests.exceptions.HTTPError as e:
         if e.response.status_code == 404:
-            return f"チケット {ticketId} は見つかりませんでした。"
-        return f"APIリクエストエラー: {str(e)}"
+            return f"Ticket {ticketId} not found."
+        return f"API request error: {str(e)}"
     except Exception as e:
-        return f"エラーが発生しました: {str(e)}"
+        return f"An error occurred: {str(e)}"
 
-@mcp.tool(description="新規チケットを作成する - 必要情報を指定して新しいチケットを登録")
+@mcp.tool(description="Create a new ticket - Register a new ticket with the required information")
 def create_ticket(
     receptionDateTime: str,
     requestorId: str,
@@ -290,39 +290,39 @@ def create_ticket(
     ctx: Context = None
 ) -> Dict[str, str]:
     """
-    新しいチケットをシステムに登録する
+    Register a new ticket in the system
 
     Parameters:
-    - receptionDateTime: 受付日時（ISO 8601形式: YYYY-MM-DDThh:mm:ss）
-    - requestorId: リクエスタのID（usersコレクション参照、get_usersで確認可能）
-    - accountId: アカウントID（accountsコレクション参照、get_accountsで確認可能）
-    - categoryId: カテゴリID（categoriesコレクション参照、get_categoriesで確認可能）
-    - categoryDetailId: カテゴリ詳細ID（categoryDetailsコレクション参照、get_category_detailsで確認可能）
-    - requestChannelId: 受付チャネルID（例: "ch1"=Email、"ch2"=電話、"ch3"=Teams）
-    - summary: チケットの概要（タイトル）
-    - description: チケットの詳細内容
-    - personInChargeId: 担当者ID（usersコレクション参照、get_usersで確認可能）
-    - statusId: ステータスID（statusesコレクション参照、get_statusesで確認可能）
-    - scheduledCompletionDate: 対応予定日（ISO 8601形式: YYYY-MM-DD、省略可）
-    - completionDate: 完了日（ISO 8601形式: YYYY-MM-DD、省略可）
-    - actualEffortHours: 実績工数（時間単位、省略可）
-    - responseCategoryId: 対応分類ID（省略可）
-    - responseDetails: 対応内容詳細（省略可）
-    - hasDefect: 不具合有無（デフォルト: False、省略可）
-    - externalTicketId: 外部チケット番号（例: EEP番号、省略可）
-    - remarks: 備考（省略可）
-    - attachments: 添付ファイル情報（省略可）、以下の形式:
+    - receptionDateTime: Reception date/time (ISO 8601 format: YYYY-MM-DDThh:mm:ss)
+    - requestorId: Requestor ID (reference users collection, can be checked with get_users)
+    - accountId: Account ID (reference accounts collection, can be checked with get_accounts)
+    - categoryId: Category ID (reference categories collection, can be checked with get_categories)
+    - categoryDetailId: Category detail ID (reference categoryDetails collection, can be checked with get_category_details)
+    - requestChannelId: Request channel ID (e.g., "ch1"=Email, "ch2"=Phone, "ch3"=Teams)
+    - summary: Ticket summary (title)
+    - description: Ticket detailed content
+    - personInChargeId: Person in charge ID (reference users collection, can be checked with get_users)
+    - statusId: Status ID (reference statuses collection, can be checked with get_statuses)
+    - scheduledCompletionDate: Scheduled completion date (ISO 8601 format: YYYY-MM-DD, optional)
+    - completionDate: Completion date (ISO 8601 format: YYYY-MM-DD, optional)
+    - actualEffortHours: Actual effort hours (in hours, optional)
+    - responseCategoryId: Response category ID (optional)
+    - responseDetails: Response details (optional)
+    - hasDefect: Whether there is a defect (default: False, optional)
+    - externalTicketId: External ticket number (e.g., EEP number, optional)
+    - remarks: Remarks (optional)
+    - attachments: Attachment information (optional), in the following format:
       [
         {"fileName": "sample.png", "fileUrl": "https://example.com/files/sample.png"}
       ]
 
     Returns:
-    - 結果を含むディクショナリ:
-      - 成功時: {"id": "新しいチケットID", "message": "チケットを作成しました。(ID: チケットID)"}
-      - 失敗時: {"error": "エラーメッセージ"}
+    - Dictionary containing the result:
+      - Success: {"id": "new ticket ID", "message": "Ticket created. (ID: ticketID)"}
+      - Failure: {"error": "Error message"}
 
-    使用例:
-    1. 基本的なチケット作成:
+    Usage examples:
+    1. Basic ticket creation:
        create_ticket(
            receptionDateTime="2023-04-01T09:00:00",
            requestorId="user3",
@@ -330,17 +330,17 @@ def create_ticket(
            categoryId="cat1",
            categoryDetailId="catd1",
            requestChannelId="ch1",
-           summary="ログイン画面でエラーが発生",
-           description="ログイン画面で認証エラーが表示されます。\n再現手順: ...",
+           summary="Error on login screen",
+           description="Authentication error appears on the login screen.\nReproduction steps: ...",
            personInChargeId="user1",
            statusId="stat1",
            scheduledCompletionDate="2023-04-10"
        )
 
-    備考:
-    - チケット番号（ticketId）は自動採番されます（"TCK-XXXX"形式）
-    - 作成時の履歴に「新規チケット作成」というコメントが自動追加されます
-    - 必須項目が欠けている場合はエラーが返されます
+    Notes:
+    - Ticket number (ticketId) is automatically assigned ("TCK-XXXX" format)
+    - A comment "New ticket created" is automatically added to the history when created
+    - An error is returned if any required fields are missing
     """
     # Get API base URL
     api_base_url = ctx.request_context.lifespan_context.api_base_url
@@ -388,7 +388,7 @@ def create_ticket(
         
         return {
             'id': result.get('id', 'unknown'),
-            'message': f"チケットを作成しました。(ID: {result.get('id', 'unknown')})"
+            'message': f"Ticket created. (ID: {result.get('id', 'unknown')})"
         }
     
     except requests.exceptions.HTTPError as e:
@@ -401,16 +401,16 @@ def create_ticket(
         except:
             pass
         
-        return {"error": f"APIエラー: {error_msg}"}
+        return {"error": f"API error: {error_msg}"}
     
     except Exception as e:
-        return {"error": f"エラーが発生しました: {str(e)}"}
+        return {"error": f"An error occurred: {str(e)}"}
 
-@mcp.tool(description="既存チケットを更新する - チケットIDと更新内容を指定してチケット情報を更新")
+@mcp.tool(description="Update existing ticket - Update ticket information by specifying ticket ID and updated content")
 def update_ticket(
     ticketId: str,
     updatedById: str,
-    comment: Optional[str] = "チケットを更新しました",
+    comment: Optional[str] = "Ticket updated",
     requestorId: Optional[str] = None,
     accountId: Optional[str] = None,
     categoryId: Optional[str] = None,
@@ -431,48 +431,48 @@ def update_ticket(
     ctx: Context = None
 ) -> Dict[str, str]:
     """
-    既存のチケット情報を更新する
+    Update existing ticket information
 
     Parameters:
-    - ticketId: 更新対象のチケットID（例: "TCK-0001"）
-    - updatedById: 更新者のユーザーID（usersコレクション参照）
-    - comment: 更新コメント（省略可、デフォルト: "チケットを更新しました"）
+    - ticketId: ID of the ticket to update (e.g., "TCK-0001")
+    - updatedById: User ID of the person making the update (reference users collection)
+    - comment: Update comment (optional, default: "Ticket updated")
     
-    更新可能なフィールド（すべて省略可、更新しないフィールドはNoneを指定）:
-    - requestorId: リクエスタID
-    - accountId: アカウントID
-    - categoryId: カテゴリID
-    - categoryDetailId: カテゴリ詳細ID
-    - requestChannelId: 受付チャネルID
-    - summary: 概要
-    - description: 詳細
-    - personInChargeId: 担当者ID
-    - statusId: ステータスID
-    - scheduledCompletionDate: 対応予定日（YYYY-MM-DD形式）
-    - completionDate: 完了日（YYYY-MM-DD形式）
-    - actualEffortHours: 実績工数（時間単位）
-    - responseCategoryId: 対応分類ID
-    - responseDetails: 対応内容詳細
-    - hasDefect: 不具合有無
-    - externalTicketId: 外部チケット番号
-    - remarks: 備考
+    Updatable fields (all optional, specify None for fields that shouldn't be updated):
+    - requestorId: Requestor ID
+    - accountId: Account ID
+    - categoryId: Category ID
+    - categoryDetailId: Category detail ID
+    - requestChannelId: Request channel ID
+    - summary: Summary
+    - description: Description
+    - personInChargeId: Person in charge ID
+    - statusId: Status ID
+    - scheduledCompletionDate: Scheduled completion date (YYYY-MM-DD format)
+    - completionDate: Completion date (YYYY-MM-DD format)
+    - actualEffortHours: Actual effort hours (in hours)
+    - responseCategoryId: Response category ID
+    - responseDetails: Response details
+    - hasDefect: Whether there is a defect
+    - externalTicketId: External ticket number
+    - remarks: Remarks
 
     Returns:
-    - 結果を含むディクショナリ:
-      - 成功時: {"id": "更新したチケットID", "message": "チケットを更新しました。(ID: チケットID)"}
-      - 失敗時: {"error": "エラーメッセージ"}
+    - Dictionary containing the result:
+      - Success: {"id": "updated ticket ID", "message": "Ticket updated. (ID: ticketID)"}
+      - Failure: {"error": "Error message"}
 
-    使用例:
-    1. ステータスと担当者の更新:
+    Usage examples:
+    1. Update status and person in charge:
        update_ticket(
            ticketId="TCK-0001",
            updatedById="user1",
            statusId="stat2",
            personInChargeId="user2",
-           comment="新担当者に引き継ぎました"
+           comment="Transferred to new person in charge"
        )
 
-    2. 完了処理:
+    2. Complete ticket processing:
        update_ticket(
            ticketId="TCK-0001",
            updatedById="user2",
@@ -480,14 +480,14 @@ def update_ticket(
            completionDate="2023-05-10",
            actualEffortHours=3.5,
            responseCategoryId="resp1",
-           responseDetails="問題を特定し修正を完了しました",
-           comment="対応完了"
+           responseDetails="Identified and fixed the issue",
+           comment="Response completed"
        )
 
-    備考:
-    - 存在しないチケットIDを指定した場合はエラー
-    - 更新されたフィールドのみ変更され、指定されていないフィールドは変更されません
-    - 更新履歴は自動的に記録され、変更前と変更後の値が保存されます
+    Notes:
+    - Error if non-existent ticket ID is specified
+    - Only the fields specified will be changed; unspecified fields remain unchanged
+    - Update history is automatically recorded, and values before and after changes are saved
     """
     # Get API base URL
     api_base_url = ctx.request_context.lifespan_context.api_base_url
@@ -523,7 +523,7 @@ def update_ticket(
         
         return {
             'id': result.get('id', 'unknown'),
-            'message': f"チケットを更新しました。(ID: {ticketId})"
+            'message': f"Ticket updated. (ID: {ticketId})"
         }
     
     except requests.exceptions.HTTPError as e:
@@ -537,14 +537,14 @@ def update_ticket(
             pass
         
         if e.response.status_code == 404:
-            return {"error": f"チケット {ticketId} は見つかりませんでした。"}
+            return {"error": f"Ticket {ticketId} not found."}
         
-        return {"error": f"APIエラー: {error_msg}"}
+        return {"error": f"API error: {error_msg}"}
     
     except Exception as e:
-        return {"error": f"エラーが発生しました: {str(e)}"}
+        return {"error": f"An error occurred: {str(e)}"}
 
-@mcp.tool(description="チケットにコメントや履歴を追加する - チケットの対応履歴を記録")
+@mcp.tool(description="Add comment or history to a ticket - Record ticket response history")
 def add_ticket_history(
     ticketId: str,
     userId: str,
@@ -552,30 +552,30 @@ def add_ticket_history(
     ctx: Context = None
 ) -> Dict[str, str]:
     """
-    チケットにコメントや変更履歴を追加する
+    Add a comment or change history to a ticket
 
     Parameters:
-    - ticketId: 対象のチケットID（例: "TCK-0001"）
-    - userId: コメント記入者のユーザーID（usersコレクション参照）
-    - comment: コメント内容
+    - ticketId: Target ticket ID (e.g., "TCK-0001")
+    - userId: User ID of the commenter (reference users collection)
+    - comment: Comment content
 
     Returns:
-    - 結果を含むディクショナリ:
-      - 成功時: {"id": "履歴エントリID", "message": "コメントを追加しました。(チケットID: チケットID)"}
-      - 失敗時: {"error": "エラーメッセージ"}
+    - Dictionary containing the result:
+      - Success: {"id": "history entry ID", "message": "Comment added. (Ticket ID: ticketID)"}
+      - Failure: {"error": "Error message"}
 
-    使用例:
-    1. 単純なコメント追加:
+    Usage examples:
+    1. Simple comment addition:
        add_ticket_history(
            ticketId="TCK-0001",
            userId="user2",
-           comment="お客様にメールで状況を報告しました。"
+           comment="Reported status to customer via email."
        )
 
-    備考:
-    - チケットの状態を変更する場合は update_ticket 関数を使用することを推奨
-    - このツールは主にコメントの追加や履歴の記録を目的としています
-    - 履歴のタイムスタンプは自動的に現在時刻が設定されます
+    Notes:
+    - It is recommended to use the update_ticket function when changing the ticket status
+    - This tool is primarily intended for adding comments and recording history
+    - The timestamp for the history is automatically set to the current time
     """
     # Get API base URL
     api_base_url = ctx.request_context.lifespan_context.api_base_url
@@ -600,7 +600,7 @@ def add_ticket_history(
         
         return {
             'id': result.get('id', 'unknown'),
-            'message': f"コメントを追加しました。(チケットID: {ticketId})"
+            'message': f"Comment added. (Ticket ID: {ticketId})"
         }
     
     except requests.exceptions.HTTPError as e:
@@ -614,36 +614,36 @@ def add_ticket_history(
             pass
         
         if e.response.status_code == 404:
-            return {"error": f"チケット {ticketId} は見つかりませんでした。"}
+            return {"error": f"Ticket {ticketId} not found."}
         
-        return {"error": f"APIエラー: {error_msg}"}
+        return {"error": f"API error: {error_msg}"}
     
     except Exception as e:
-        return {"error": f"エラーが発生しました: {str(e)}"}
+        return {"error": f"An error occurred: {str(e)}"}
 
 # Master data reference tools
-@mcp.tool(description="ユーザー一覧を取得する - チケット作成時に必要なユーザー情報を参照")
+@mcp.tool(description="Get user list - Reference user information needed for ticket creation")
 def get_users(
     role: Optional[str] = None,
     ctx: Context = None
 ) -> str:
     """
-    システムに登録されているユーザー（担当者、リクエスタなど）の一覧を取得し表示する
+    Retrieve and display a list of users (persons in charge, requestors, etc.) registered in the system
 
     Parameters:
-    - role: 特定の役割でフィルタリング（例: "担当者", "リクエスタ"）（省略可）
+    - role: Filter by specific role (e.g., "Person in Charge", "Requestor") (optional)
 
     Returns:
-    - ユーザー一覧のMarkdown形式テーブル
+    - User list in Markdown table format
 
-    使用例:
-    1. すべてのユーザーを表示: get_users()
-    2. 担当者のみ表示: get_users(role="担当者")
-    3. リクエスタのみ表示: get_users(role="リクエスタ")
+    Usage examples:
+    1. Display all users: get_users()
+    2. Display only persons in charge: get_users(role="Person in Charge")
+    3. Display only requestors: get_users(role="Requestor")
 
-    備考:
-    - ユーザーIDはチケット作成時の requestorId や personInChargeId として必要です
-    - 表示される情報: ID、名前、メールアドレス、役割
+    Notes:
+    - User IDs are needed as requestorId or personInChargeId when creating tickets
+    - Displayed information: ID, name, email address, role
     """
     # Get API base URL
     api_base_url = ctx.request_context.lifespan_context.api_base_url
@@ -663,10 +663,10 @@ def get_users(
         
         # Format as markdown
         if not users:
-            return "ユーザーは登録されていません。"
+            return "No users registered."
         
-        output = "# ユーザー一覧\n\n"
-        output += "| ID | 名前 | メールアドレス | 役割 |\n"
+        output = "# User List\n\n"
+        output += "| ID | Name | Email Address | Role |\n"
         output += "|---|---|---|---|\n"
         
         for user in users:
@@ -675,25 +675,25 @@ def get_users(
         return output
     
     except requests.exceptions.RequestException as e:
-        return f"APIリクエストエラー: {str(e)}"
+        return f"API request error: {str(e)}"
     except Exception as e:
-        return f"エラーが発生しました: {str(e)}"
+        return f"An error occurred: {str(e)}"
 
-@mcp.tool(description="アカウント一覧を取得する - チケット作成時に必要なアカウント情報を参照")
+@mcp.tool(description="Get account list - Reference account information needed for ticket creation")
 def get_accounts(ctx: Context = None) -> str:
     """
-    システムに登録されているアカウント（顧客企業など）の一覧を取得し表示する
+    Retrieve and display a list of accounts (customer companies, etc.) registered in the system
 
     Returns:
-    - アカウント一覧のMarkdown形式テーブル
+    - Account list in Markdown table format
 
-    使用例:
-    1. アカウント一覧を表示: get_accounts()
+    Usage examples:
+    1. Display account list: get_accounts()
 
-    備考:
-    - アカウントIDはチケット作成時の accountId として必要です
-    - 表示される情報: ID、アカウント名
-    - アカウント名順にソートされて表示されます
+    Notes:
+    - Account IDs are needed as accountId when creating tickets
+    - Displayed information: ID, account name
+    - Accounts are displayed sorted by account name
     """
     # Get API base URL
     api_base_url = ctx.request_context.lifespan_context.api_base_url
@@ -708,10 +708,10 @@ def get_accounts(ctx: Context = None) -> str:
         
         # Format as markdown
         if not accounts:
-            return "アカウントは登録されていません。"
+            return "No accounts registered."
         
-        output = "# アカウント一覧\n\n"
-        output += "| ID | アカウント名 |\n"
+        output = "# Account List\n\n"
+        output += "| ID | Account Name |\n"
         output += "|---|---|\n"
         
         for account in accounts:
@@ -720,25 +720,25 @@ def get_accounts(ctx: Context = None) -> str:
         return output
     
     except requests.exceptions.RequestException as e:
-        return f"APIリクエストエラー: {str(e)}"
+        return f"API request error: {str(e)}"
     except Exception as e:
-        return f"エラーが発生しました: {str(e)}"
+        return f"An error occurred: {str(e)}"
 
-@mcp.tool(description="カテゴリ一覧を取得する - チケット作成時に必要なカテゴリ情報を参照")
+@mcp.tool(description="Get category list - Reference category information needed for ticket creation")
 def get_categories(ctx: Context = None) -> str:
     """
-    システムで使用されるチケットカテゴリの一覧を取得し表示する
+    Retrieve and display a list of ticket categories used in the system
 
     Returns:
-    - カテゴリ一覧のMarkdown形式テーブル
+    - Category list in Markdown table format
 
-    使用例:
-    1. カテゴリ一覧を表示: get_categories()
+    Usage examples:
+    1. Display category list: get_categories()
 
-    備考:
-    - カテゴリIDはチケット作成時の categoryId として必要です
-    - カテゴリを選択した後に、関連するカテゴリ詳細を get_category_details(categoryId="...") で取得してください
-    - 表示される情報: ID、カテゴリ名
+    Notes:
+    - Category IDs are needed as categoryId when creating tickets
+    - After selecting a category, retrieve related category details with get_category_details(categoryId="...")
+    - Displayed information: ID, category name
     """
     # Get API base URL
     api_base_url = ctx.request_context.lifespan_context.api_base_url
@@ -753,10 +753,10 @@ def get_categories(ctx: Context = None) -> str:
         
         # Format as markdown
         if not categories:
-            return "カテゴリは登録されていません。"
+            return "No categories registered."
         
-        output = "# カテゴリ一覧\n\n"
-        output += "| ID | カテゴリ名 |\n"
+        output = "# Category List\n\n"
+        output += "| ID | Category Name |\n"
         output += "|---|---|\n"
         
         for category in categories:
@@ -765,32 +765,32 @@ def get_categories(ctx: Context = None) -> str:
         return output
     
     except requests.exceptions.RequestException as e:
-        return f"APIリクエストエラー: {str(e)}"
+        return f"API request error: {str(e)}"
     except Exception as e:
-        return f"エラーが発生しました: {str(e)}"
+        return f"An error occurred: {str(e)}"
 
-@mcp.tool(description="カテゴリ詳細一覧を取得する - チケット作成時に必要なカテゴリ詳細情報を参照")
+@mcp.tool(description="Get category detail list - Reference category detail information needed for ticket creation")
 def get_category_details(
     categoryId: Optional[str] = None,
     ctx: Context = None
 ) -> str:
     """
-    システムで使用されるチケットカテゴリの詳細一覧を取得し表示する
+    Retrieve and display a list of ticket category details used in the system
 
     Parameters:
-    - categoryId: 特定の親カテゴリIDでフィルタリング（省略可）
+    - categoryId: Filter by specific parent category ID (optional)
 
     Returns:
-    - カテゴリ詳細一覧のMarkdown形式テーブル
+    - Category detail list in Markdown table format
 
-    使用例:
-    1. すべてのカテゴリ詳細を表示: get_category_details()
-    2. 特定のカテゴリに属する詳細のみ表示: get_category_details(categoryId="cat1")
+    Usage examples:
+    1. Display all category details: get_category_details()
+    2. Display only details belonging to a specific category: get_category_details(categoryId="cat1")
 
-    備考:
-    - カテゴリ詳細IDはチケット作成時の categoryDetailId として必要です
-    - カテゴリIDは get_categories() で確認できます
-    - 表示される情報: ID、詳細名、親カテゴリ
+    Notes:
+    - Category detail IDs are needed as categoryDetailId when creating tickets
+    - Category IDs can be checked with get_categories()
+    - Displayed information: ID, detail name, parent category
     """
     # Get API base URL
     api_base_url = ctx.request_context.lifespan_context.api_base_url
@@ -810,10 +810,10 @@ def get_category_details(
         
         # Format as markdown
         if not category_details:
-            return "カテゴリ詳細は登録されていません。"
+            return "No category details registered."
         
-        output = "# カテゴリ詳細一覧\n\n"
-        output += "| ID | 詳細名 | 親カテゴリ |\n"
+        output = "# Category Detail List\n\n"
+        output += "| ID | Detail Name | Parent Category |\n"
         output += "|---|---|---|\n"
         
         for detail in category_details:
@@ -822,25 +822,25 @@ def get_category_details(
         return output
     
     except requests.exceptions.RequestException as e:
-        return f"APIリクエストエラー: {str(e)}"
+        return f"API request error: {str(e)}"
     except Exception as e:
-        return f"エラーが発生しました: {str(e)}"
+        return f"An error occurred: {str(e)}"
 
-@mcp.tool(description="ステータス一覧を取得する - チケット作成・更新時に必要なステータス情報を参照")
+@mcp.tool(description="Get status list - Reference status information needed for ticket creation/update")
 def get_statuses(ctx: Context = None) -> str:
     """
-    システムで使用されるチケットステータスの一覧を取得し表示する
+    Retrieve and display a list of ticket statuses used in the system
 
     Returns:
-    - ステータス一覧のMarkdown形式テーブル
+    - Status list in Markdown table format
 
-    使用例:
-    1. ステータス一覧を表示: get_statuses()
+    Usage examples:
+    1. Display status list: get_statuses()
 
-    備考:
-    - ステータスIDはチケット作成・更新時の statusId として必要です
-    - 表示される情報: ID、ステータス名
-    - ステータスは一般的なワークフロー順（順番）に表示されます
+    Notes:
+    - Status IDs are needed as statusId when creating or updating tickets
+    - Displayed information: ID, status name
+    - Statuses are displayed in typical workflow order
     """
     # Get API base URL
     api_base_url = ctx.request_context.lifespan_context.api_base_url
@@ -855,10 +855,10 @@ def get_statuses(ctx: Context = None) -> str:
         
         # Format as markdown
         if not statuses:
-            return "ステータスは登録されていません。"
+            return "No statuses registered."
         
-        output = "# ステータス一覧\n\n"
-        output += "| ID | ステータス名 |\n"
+        output = "# Status List\n\n"
+        output += "| ID | Status Name |\n"
         output += "|---|---|\n"
         
         for status in statuses:
@@ -867,24 +867,24 @@ def get_statuses(ctx: Context = None) -> str:
         return output
     
     except requests.exceptions.RequestException as e:
-        return f"APIリクエストエラー: {str(e)}"
+        return f"API request error: {str(e)}"
     except Exception as e:
-        return f"エラーが発生しました: {str(e)}"
+        return f"An error occurred: {str(e)}"
 
-@mcp.tool(description="受付チャネル一覧を取得する - チケット作成時に必要なチャネル情報を参照")
+@mcp.tool(description="Get request channel list - Reference channel information needed for ticket creation")
 def get_request_channels(ctx: Context = None) -> str:
     """
-    システムで使用される受付チャネルの一覧を取得し表示する
+    Retrieve and display a list of request channels used in the system
     
     Returns:
-    - 受付チャネル一覧のMarkdown形式テーブル
+    - Request channel list in Markdown table format
 
-    使用例:
-    1. 受付チャネル一覧を表示: get_request_channels()
+    Usage examples:
+    1. Display request channel list: get_request_channels()
 
-    備考:
-    - 受付チャネルIDはチケット作成時の requestChannelId として必要です
-    - 表示される情報: ID、チャネル名
+    Notes:
+    - Request channel IDs are needed as requestChannelId when creating tickets
+    - Displayed information: ID, channel name
     """
     # Get API base URL
     api_base_url = ctx.request_context.lifespan_context.api_base_url
@@ -899,10 +899,10 @@ def get_request_channels(ctx: Context = None) -> str:
         
         # Format as markdown
         if not channels:
-            return "受付チャネルは登録されていません。"
+            return "No request channels registered."
         
-        output = "# 受付チャネル一覧\n\n"
-        output += "| ID | チャネル名 |\n"
+        output = "# Request Channel List\n\n"
+        output += "| ID | Channel Name |\n"
         output += "|---|---|\n"
         
         for channel in channels:
@@ -911,9 +911,9 @@ def get_request_channels(ctx: Context = None) -> str:
         return output
     
     except requests.exceptions.RequestException as e:
-        return f"APIリクエストエラー: {str(e)}"
+        return f"API request error: {str(e)}"
     except Exception as e:
-        return f"エラーが発生しました: {str(e)}"
+        return f"An error occurred: {str(e)}"
 
 # === Resources ===
 
@@ -922,33 +922,33 @@ def get_request_channels(ctx: Context = None) -> str:
 def get_overview_docs() -> str:
     """Get overview documentation for the ticket system"""
     return """
-    # チケット管理システム MCP サーバー
+    # Ticket Management System MCP Server
 
-    このサーバーは、チケット管理システムの API を介して様々なチケット操作を提供します。
+    This server provides various ticket operations through the Ticket Management System API.
 
-    ## 使用可能な機能
+    ## Available Features
 
-    ### チケット操作
+    ### Ticket Operations
     
-    - **チケット一覧取得**: 条件に応じてチケットのリストを取得（`get_ticket_list`）
-    - **チケット詳細取得**: 特定のチケットの詳細情報を取得（`get_ticket_detail`）
-    - **チケット作成**: 新規チケットを作成（`create_ticket`）
-    - **チケット更新**: 既存チケットの情報を更新（`update_ticket`）
-    - **履歴追加**: チケットにコメントや履歴を追加（`add_ticket_history`）
+    - **Get Ticket List**: Retrieve a list of tickets based on conditions (`get_ticket_list`)
+    - **Get Ticket Details**: Retrieve detailed information for a specific ticket (`get_ticket_detail`)
+    - **Create Ticket**: Create a new ticket (`create_ticket`)
+    - **Update Ticket**: Update existing ticket information (`update_ticket`)
+    - **Add History**: Add comments or history to a ticket (`add_ticket_history`)
 
-    ### マスターデータ参照
+    ### Master Data Reference
     
-    - **ユーザー一覧**: システムに登録されているユーザー情報を取得（`get_users`）
-    - **アカウント一覧**: システムに登録されているアカウント情報を取得（`get_accounts`）
-    - **カテゴリ一覧**: システムに登録されているカテゴリ情報を取得（`get_categories`）
-    - **カテゴリ詳細一覧**: システムに登録されているカテゴリ詳細情報を取得（`get_category_details`）
-    - **ステータス一覧**: システムに登録されているステータス情報を取得（`get_statuses`）
-    - **受付チャネル一覧**: システムに登録されている受付チャネル情報を取得（`get_request_channels`）
+    - **User List**: Retrieve user information registered in the system (`get_users`)
+    - **Account List**: Retrieve account information registered in the system (`get_accounts`)
+    - **Category List**: Retrieve category information registered in the system (`get_categories`)
+    - **Category Detail List**: Retrieve category detail information registered in the system (`get_category_details`)
+    - **Status List**: Retrieve status information registered in the system (`get_statuses`)
+    - **Request Channel List**: Retrieve request channel information registered in the system (`get_request_channels`)
 
-    ## 備考
+    ## Notes
 
-    - 各機能の詳細な使い方は、ツール名の後に続くドキュメント文字列を参照してください
-    - APIの接続先は環境変数 `API_BASE_URL` で設定可能です（デフォルト: http://localhost:8080）
+    - For detailed usage of each feature, refer to the docstring following the tool name
+    - The API connection destination can be configured with the environment variable `API_BASE_URL` (default: http://localhost:8080)
     """
 
 # Run the server

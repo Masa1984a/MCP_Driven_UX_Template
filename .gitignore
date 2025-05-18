@@ -9,7 +9,7 @@ __pycache__/
 dist/
 build/
 
-# 仮想環境
+# Virtual Environment
 .venv/
 venv/
 ENV/
@@ -17,17 +17,11 @@ mcp_server/.venv/
 mcp_server/venv/
 mcp_server/ENV/
 
-# 秘密鍵ファイル (ファイル名を固定している場合)
-firebase-credentials.json
-# またはサービスアカウントキーの一般的なパターン
-*-credentials.json
-*.privatekey
-
-# OS固有ファイル
+# OS-specific files
 .DS_Store
 Thumbs.db
 
-# エディタ/IDE設定ファイル
+# Editor/IDE configuration files
 .vscode/
 .idea/
 
