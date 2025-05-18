@@ -23,7 +23,7 @@
 
 **实现下一代用户体验「MCP Driven UX」的工单管理系统模板**
 
-<a href="https://www.youtube.com/watch?v=Q7iKhyOF_OM" target="_blank">
+<a href="https://www.youtube.com/watch?v=Q7iKhyOF_OM" target="_blank" rel="noopener noreferrer">
   <img src="https://img.youtube.com/vi/Q7iKhyOF_OM/0.jpg" alt="Introduction: MCP Driven UX Template">
 </a>
 

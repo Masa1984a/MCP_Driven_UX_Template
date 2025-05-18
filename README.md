@@ -23,7 +23,7 @@
 
 **Next-generation user experience "MCP Driven UX" ticket management system template**
 
-<a href="https://www.youtube.com/watch?v=Q7iKhyOF_OM" target="_blank">
+<a href="https://www.youtube.com/watch?v=Q7iKhyOF_OM" target="_blank" rel="noopener noreferrer">
   <img src="https://img.youtube.com/vi/Q7iKhyOF_OM/0.jpg" alt="Introduction: MCP Driven UX Template">
 </a>
 

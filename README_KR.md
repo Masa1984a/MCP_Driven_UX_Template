@@ -23,7 +23,7 @@
 
 **차세대 사용자 경험 「MCP Driven UX」를 실현하는 티켓 관리 시스템 템플릿**
 
-<a href="https://www.youtube.com/watch?v=Q7iKhyOF_OM" target="_blank">
+<a href="https://www.youtube.com/watch?v=Q7iKhyOF_OM" target="_blank" rel="noopener noreferrer">
   <img src="https://img.youtube.com/vi/Q7iKhyOF_OM/0.jpg" alt="Introduction: MCP Driven UX Template">
 </a>
 
