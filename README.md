@@ -1,294 +1,328 @@
+# MCP Driven UX Template
+
 <div align="center">
 
-# ✨ PostgreSQL Minimum Database Container ✨
+<p align="center">
+  <img src="assets/MCP_Driven_UX_logo.png" width="648"/>
+</p>
 
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-v16-blue)
-![Podman](https://img.shields.io/badge/Podman-CLI-9cf)
+![MCP Logo](https://img.shields.io/badge/MCP-Model_Context_Protocol-purple)
+![TypeScript](https://img.shields.io/badge/TypeScript-3.0+-blue)
+![Python](https://img.shields.io/badge/Python-3.9+-green)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-blue)
+![Docker](https://img.shields.io/badge/Docker-Compose-2496ED)
+
+<p align="center">
+  <a href="./README.md"><img alt="README in English" src="https://img.shields.io/badge/English-d9d9d9"></a>
+  <a href="./README_JA.md"><img alt="日本語のREADME" src="https://img.shields.io/badge/日本語-d9d9d9"></a>
+  <a href="./README_CN.md"><img alt="简体中文版自述文件" src="https://img.shields.io/badge/简体中文-d9d9d9"></a>
+  <a href="./README_TW.md"><img alt="繁體中文版README" src="https://img.shields.io/badge/繁體中文-d9d9d9"></a>
+  <a href="./README_KR.md"><img alt="README in Korean" src="https://img.shields.io/badge/한국어-d9d9d9"></a>
+  <a href="./README_AR.md"><img alt="README بالعربية" src="https://img.shields.io/badge/العربية-d9d9d9"></a>
+</p>
+
+**Next-generation user experience "MCP Driven UX" ticket management system template**
+
+[![Introduction: MCP Driven UX Template](https://img.youtube.com/vi/Q7iKhyOF_OM/0.jpg)](https://www.youtube.com/watch?v=Q7iKhyOF_OM)
+
+*YouTube: Introduction: MCP Driven UX Template*
 
 </div>
 
-## 📋 概要
+## 📋 Overview
 
-このプロジェクトは、Podman CLIを使用してPostgreSQLデータベースのみを実行するコンテナ環境を提供します。mcp_uxスキーマでデータベースが初期化され、すぐに使用できる状態になります。
+This project is a reference implementation of "MCP Driven UX" that proposes a paradigm shift from traditional MVC (Model-View-Controller) architecture to interactive interfaces with LLMs.
 
-## 🛠️ 技術スタック
+Leveraging the Model Context Protocol (MCP), this project demonstrates role division and implementation methods for the following technology stack using a ticket management system as a sample:
 
-- **データベース**: PostgreSQL 16
-- **コンテナ管理**: Podman CLI
+- **MCP Server (Python)**: Integration between LLM and backend API
+- **Business Logic (TypeScript)**: RESTful API implementation
+- **Data Model (PostgreSQL)**: Persistence layer management
 
-## 📥 インストール方法
+## 🎯 Concept
 
-### 前提条件
+### From MVC to MCP Driven UX
 
-- Windows PC
-- [Podman CLI](https://podman.io/getting-started/installation#windows) がインストールされていること
-- WSL2 が有効化されていること（Podman for Windows の要件）
+Current web services and client-server applications are mainly based on the MVC pattern. However, with the rise of LLMs and standardization like MCP, a transition from UI-based services to interactive (chat/voice) interfaces is expected.
 
-### セットアップ手順
+This repository implements a ticket management system as an example template to realize this transition.
 
-1. リポジトリをクローンまたはダウンロード:
+### Architecture
+
+<img src="assets/MCP_Driven_UX_Architecture.png" width="648"/>
+
+```
+┌─────────────┐     MCP      ┌───────────────┐     HTTP     ┌──────────────┐
+│   Claude    │◄────────────►│  MCP Server   │◄────────────►│  API Server  │
+│  Desktop    │              │   (Python)    │              │ (TypeScript) │
+└─────────────┘              └───────────────┘              └──────┬───────┘
+                                                                   │
+                                                                   ▼
+                                                             ┌──────────────┐
+                                                             │  PostgreSQL  │
+                                                             │     (DB)     │
+                                                             └──────────────┘
+```
+
+## ✨ Main Features
+
+- **Ticket Management**
+  - Create, update, search, and view ticket details
+  - History management and comment functionality
+  - Status management and assignee allocation
+
+- **MCP Integration**
+  - Natural language ticket operations from Claude Desktop
+  - Master data reference and filtering
+  - Real-time status confirmation
+
+- **Enterprise Features**
+  - Role-based access control
+  - Audit trail and log management
+  - Multi-tenant support
+
+## 🛠️ Tech Stack
+
+### Backend
+- **MCP Server**: Python 3.9+, MCP SDK
+- **API Server**: Node.js, TypeScript, Express
+- **Database**: PostgreSQL 16
+
+### Infrastructure
+- **Container**: Docker/Podman
+- **Orchestration**: Docker Compose
+
+## 📥 Installation
+
+### Prerequisites
+
+- Docker or Podman (recommended)
+- Python 3.9+ (for MCP server)
+- Node.js 18+ (for API server)
+- Claude Desktop (MCP client)
+
+### Setup Steps
+
+1. **Clone the repository**
 
 ```bash
-git clone https://github.com/Masa1984a/PostgreSQL_Minimum_Database_Container.git
-cd PostgreSQL_Minimum_Database_Container
+git clone https://github.com/Masa1984a/MCP_Driven_UX_Template.git
+cd MCP_Driven_UX_Template
 ```
 
-2. 使用中のPodmanマシンを確認:
+2. **Authentication setup** (Podman/Docker)
 
 ```bash
-podman machine list
+# For Podman
+podman login docker.io --username <username>
+
+# For Docker (also required when using compose with Podman)
+docker login docker.io --username <username>
 ```
 
-アクティブなマシン（名前の横に`*`がついているもの）がすでに起動していることを確認します。
-もしアクティブなマシンがない場合や起動していない場合は、初期化と起動を行います:
+3. **Environment variable setup**
 
 ```bash
-podman machine init
-podman machine start
-podman machine start <マシン名>
+cp .env.sample .env
+# Edit .env file as needed (change INIT_LANG=ja for Japanese data)
 ```
 
-3. データベース用の永続ボリュームを作成:
+4. **Start containers**
 
 ```bash
-podman volume create postgres_data
+# For Podman
+podman compose up -d
+
+# For Docker
+docker-compose up -d
 ```
 
-4. Podman CLI でデータベースコンテナを起動:
+5. **Python virtual environment setup**
+
+Set up the Python environment for the MCP server:
 
 ```bash
-podman run -d --name postgres-db \
-  -e POSTGRES_USER=postgres \
-  -e POSTGRES_PASSWORD=postgres \
-  -e POSTGRES_DB=mcp_ux \
-  -v postgres_data:/var/lib/postgresql/data \
-  -v ./db/init:/docker-entrypoint-initdb.d \
-  -p 5432:5432 \
-  postgres:16
+cd ./mcp_server
+python -m venv .venv
+.venv\Scripts\Activate.ps1  # For Windows PowerShell
+# For Bash/Linux/Mac: source .venv/bin/activate
+python -m pip install --upgrade pip
+pip install -r requirements.txt
 ```
 
-Windows PowerShellでは以下のように実行します:
+6. **Claude for Desktop configuration**
 
-```powershell
-podman run -d --name postgres-db `
-  -e POSTGRES_USER=postgres `
-  -e POSTGRES_PASSWORD=postgres `
-  -e POSTGRES_DB=mcp_ux `
-  -v postgres_data:/var/lib/postgresql/data `
-  -v ./db/init:/docker-entrypoint-initdb.d `
-  -p 5432:5432 `
-  postgres:16
+Edit Claude for Desktop configuration file `claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "TicketManagementSystem": {
+      "command": "uv",
+      "args": [
+        "--directory", "project-directory-path",
+        "run",
+        "mcp_server.py"
+      ]
+    }
+  }
+}
 ```
 
-5. コンテナが正常に動作していることを確認:
+**Note**: Replace `project-directory-path` with your actual project path. For Windows, backslashes in paths need to be escaped. Example: `C:\\Users\\username\\projects\\ticket-system`
+
+### Data Reset
+
+To delete existing data and reinitialize:
 
 ```bash
-podman ps
+# Stop with volumes
+podman compose down -v
+
+# Restart
+podman compose up --build -d
 ```
 
-6. Podmanマシンの接続用IPアドレスを確認:
+## 🔍 Usage
 
-```bash
-podman machine ssh "ip addr show eth0 | grep 'inet '"
-podman machine ssh "ip addr show <マシン名> eth0 | grep 'inet '"
-```
+### Operations from Claude Desktop
 
-このIPアドレス（例：172.xx.xx.xx）を使用してPostgreSQLに接続します。
-
-## 📊 データベース接続情報
-
-- **ホスト**: Podmanマシンの IP アドレス（`podman machine ssh "ip addr show eth0 | grep 'inet '"` で確認）
-- **ポート**: 5432
-- **データベース名**: mcp_ux
-- **ユーザー名**: postgres
-- **パスワード**: postgres
-- **スキーマ名**: mcp_ux
-
-> **注意**: Windows から接続する場合、`localhost` ではなく必ず Podman マシンの IP アドレスを使用してください。
-
-## 📖 使用方法
-
-### データベースへの接続
-
-任意のPostgreSQLクライアントを使用して接続できます:
-
-#### psql (コマンドライン):
-
-```bash
-podman exec -it postgres-db psql -U postgres -d mcp_ux
-```
-
-#### pgAdmin や DBeaver などのGUIクライアント:
-
-上記の接続情報を使用して接続してください。
-
-### コンテナの管理
-
-#### コンテナの停止:
-
-```bash
-podman stop postgres-db
-```
-
-#### コンテナの再起動:
-
-```bash
-podman start postgres-db
-```
-
-#### ログの確認:
-
-```bash
-podman logs -f postgres-db
-```
-
-#### 接続の問題が発生した場合:
-
-```bash
-# Podmanマシンが実行中か確認
-podman machine list
-
-# コンテナの状態を確認
-podman ps -a
-
-# コンテナを再起動
-podman restart postgres-db
-
-# Podmanマシンの接続用IPを確認
-podman machine ssh "ip addr show eth0 | grep 'inet '"
-```
-
-ファイアウォールでポート5432が開放されていることも確認してください。
-
-## 📁 プロジェクト構造
+Once the MCP server is running, you can operate tickets with natural language from Claude Desktop:
 
 ```
-project/
-├── db/                  # データベース関連ファイル
-│   └── init/            # 初期化SQLスクリプト
-│       └── init.sql     # データベース初期化スクリプト
-├── docker-compose.yml   # コンテナ構成ファイル
-└── README.md            # プロジェクト説明
+# Display ticket list
+"Show current ticket list"
+
+# Search with specific conditions
+"Which tickets are scheduled to be completed this week?"
+
+# Create a ticket
+"Create a new ticket. Request for user master update."
+
+# Update a ticket
+"Change the status of ticket TCK-0002 to in progress"
 ```
 
-> **注意**: データは`postgres_data`という名前付きボリュームに保存されるため、`db/data`ディレクトリは不要です。
+### API Endpoints
 
-## 📋 初期データベース構造
+The API server provides the following endpoints:
 
-このプロジェクトでは、コンテナ起動時に以下のテーブル構造とサンプルデータが `mcp_ux` スキーマに自動的に作成されます。
+- `GET /tickets` - Get ticket list (with filtering and pagination)
+- `GET /tickets/:id` - Get ticket details
+- `POST /tickets` - Create new ticket
+- `PUT /tickets/:id` - Update ticket
+- `POST /tickets/:id/history` - Add history
+- `GET /tickets/:id/history` - Get history
 
-### テーブル構造
+Master data:
+- `GET /tickets/master/users` - User list
+- `GET /tickets/master/accounts` - Account list
+- `GET /tickets/master/categories` - Category list
+- `GET /tickets/master/statuses` - Status list
 
-| テーブル名 | 説明 |
-|------------|------|
-| users | システムユーザー情報を管理 |
-| accounts | アカウント（企業）情報を管理 |
-| categories | チケットのカテゴリを管理 |
-| category_details | カテゴリの詳細情報を管理 |
-| statuses | チケットのステータスを管理 |
-| request_channels | 問い合わせの受付チャネルを管理 |
-| response_categories | 対応分類を管理 |
-| tickets | メインとなるチケット情報を管理 |
-| attachments | チケットに添付されたファイル情報を管理 |
-| ticket_history | チケットの変更履歴を管理 |
-| history_changed_fields | 変更されたフィールドの詳細を管理 |
+## 📊 Data Model
 
-### サンプルデータ
+Main table structure:
 
-初期化時に以下のサンプルデータが登録されます：
-
-- **ユーザー**: 担当者2名（山田太郎、鈴木花子）、リクエスタ2名（佐藤次郎、高橋三郎）
-- **アカウント**: 3社（株式会社ABC、XYZ株式会社、123株式会社）
-- **カテゴリ**: 問合せ、データ修正依頼、障害報告
-- **ステータス**: 受付済、対応中、確認中、完了
-- **受付チャネル**: Email、電話、Teams
-- **チケット**: サンプルチケット3件（検索機能の問題、ユーザーマスター更新依頼、ダッシュボード表示不具合）
-
-各テーブルには適切な関連付けがされており、チケット処理システムのモデルとして機能します。
-
-## 🧪 開発のヒント
-
-### データベースの永続化について
-
-このセットアップでは、名前付きボリューム `postgres_data` を使用してデータを永続化しています。この方法には以下の利点があります：
-
-- コンテナを削除しても、データは保持されます
-- Podmanがボリュームの管理とパーミッション問題を解決します
-- ホストマシンのファイルシステムとの互換性の問題を回避できます
-
-#### 重要: 永続性の範囲について
-
-名前付きボリュームは **Podmanマシン（WSL2仮想環境）内に作成** されます：
-
-- コンテナを削除・再作成してもデータは保持されます
-- Podmanマシンを再起動してもデータは保持されます
-- **ただし、Podmanマシン自体を削除すると、ボリュームも一緒に消えます**
-
-重要なデータは定期的にバックアップすることをお勧めします：
-
-```bash
-# データベースのバックアップを取得（Windowsのファイルシステムに保存）
-podman exec -it postgres-db pg_dump -U postgres mcp_ux > backup.sql
-
-# 必要に応じて復元する場合
-podman exec -it postgres-db psql -U postgres -d mcp_ux < backup.sql
+```sql
+-- Tickets table (tickets)
+- id: Ticket ID (TCK-XXXX format)
+- reception_date_time: Reception datetime
+- requestor_id/name: Requestor
+- account_id/name: Account (company)
+- category_id/name: Category
+- status_id/name: Status
+- person_in_charge_id/name: Person in charge
+- scheduled_completion_date: Scheduled completion date
 ```
 
-ボリュームの場所を確認するには:
+For detailed structure, see `/db/init/en/init.sql` or `/db/init/ja/init.sql`.
 
-```bash
-podman volume inspect postgres_data
-```
+## 🚀 Deployment
 
-通常、このパスはPodmanマシン内の `/var/lib/containers/storage/volumes/postgres_data/_data` のようになります。
+### Production Deployment
 
-### データベーススキーマの変更
+This application can be deployed to the following platforms (verification required):
 
-`./db/init/init.sql` ファイルはコンテナの初回起動時にのみ実行されます。既存のコンテナでスキーマを変更する場合は、以下の手順を実行してください:
+- **Google Cloud Platform**
+  - Cloud Functions v2 (source upload)
+  - Cloud Run (Docker image)
+  - Cloud SQL for PostgreSQL
 
-1. コンテナを停止:
+- **AWS**
+  - Lambda + API Gateway
+  - ECS/Fargate
+  - RDS for PostgreSQL
 
-```bash
-podman stop postgres-db
-podman rm postgres-db
-```
+- **Azure**
+  - Functions
+  - Container Instances
+  - Azure Database for PostgreSQL
 
-2. データベースボリュームを削除（注意: 全データが消去されます）:
+## 🧩 Extensibility
 
-```bash
-podman volume rm postgres_data
-podman volume create postgres_data
-```
+This template can be extended with:
 
-3. init.sql ファイルを編集
+- **Additional MCP tools**: File operations, external API integration, etc.
+- **Authentication/Authorization**: OAuth 2.0, SAML support
+- **Notification features**: Email, Slack, Teams integration
+- **Reporting features**: PDF generation, dashboards
+- **Multi-language support**: i18n implementation
 
-4. コンテナを再作成:
+## 🤝 Contribution
 
-```bash
-podman run -d --name postgres-db \
-  -e POSTGRES_USER=postgres \
-  -e POSTGRES_PASSWORD=postgres \
-  -e POSTGRES_DB=mcp_ux \
-  -v postgres_data:/var/lib/postgresql/data \
-  -v ./db/init:/docker-entrypoint-initdb.d \
-  -p 5432:5432 \
-  postgres:16
-```
+Pull requests are welcome. For major changes, please create an issue first to discuss.
 
-### Podman マシンの管理
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Create a Pull Request
 
-Podman マシンを停止する場合:
+## 🔐 Security
 
-```bash
-podman machine stop
-```
+- Properly manage environment variables in production
+- Never commit database credentials
+- Configure MCP server access control appropriately
 
-Podman マシンを再開する場合:
+## 📄 License
 
-```bash
-podman machine start
-```
+[MIT License](LICENSE)
 
-## 📝 ライセンス
+## 🙏 Acknowledgments
 
-[MIT](LICENSE)
+- [Claude Code](https://docs.anthropic.com/en/docs/claude-code/overview) - SWE (Software Engineering) AI by Anthropic
+- [Codex CLI](https://github.com/openai/codex) - SWE (Software Engineering) AI by OpenAI
+- [Model Context Protocol](https://modelcontextprotocol.io) - Open standard by Anthropic
+- Claude Desktop - MCP client implementation
+- All contributors
+
+## ⚠️ Trademark and Brand Notice
+
+While this repository is distributed as OSS under the MIT License, the following product names, service names, and logos are registered trademarks or trademarks of their respective companies. This project does not have official sponsorship, affiliation, or endorsement from trademark holders, and there is no capital or contractual relationship with them.
+
+| Trademark | Rights Holder | Reference Brand Guidelines |
+| --------- | ------------- | -------------------------- |
+| Claude™, Anthropic™ | Anthropic PBC | Please follow brand guidelines<sup>※1</sup> |
+| OpenAI®, ChatGPT®, Codex® | OpenAI OpCo, LLC | OpenAI Brand Guidelines<sup>※2</sup> |
+| GPT | OpenAI (pending) and others | Recommended to avoid misidentification even when used as generic term |
+| PostgreSQL® | The PostgreSQL Global Development Group | — |
+| Docker® | Docker, Inc. | — |
+
+<sup>※1</sup> Anthropic periodically updates trademark policies on their official website. Please check the latest guidelines when using.  
+<sup>※2</sup> When using OpenAI names/logos, follow OpenAI Brand Guidelines. Guidelines may change, so regular review is recommended.
+
+### API/Service Terms of Use
+
+- When integrating generative AI services like **OpenAI API / Claude API**, comply with each company's [Terms of Use](https://openai.com/policies/row-terms-of-use) and AUP.
+- For commercial use or high-volume access, be sure to review terms regarding rate limits, secondary use of outputs, and personal information handling.
+
+> **Disclaimer:**  
+> This project is distributed "AS IS", without warranty of any kind.  
+> Use of third-party services is at your own risk and subject to their respective terms.
+
+---
+
+<div align="center">
+Built with ❤️ for the future of human-AI interaction
+</div>
