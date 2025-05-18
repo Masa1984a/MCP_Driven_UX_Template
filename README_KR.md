@@ -294,8 +294,8 @@ API 서버는 다음 엔드포인트를 제공합니다:
 
 ## 🙏 감사의 말
 
-- [Claude Code](https://docs.anthropic.com/en/docs/claude-code/overview) - Anthropic의 SWE(Software Engineering) AI
-- [Codex CLI](https://github.com/openai/codex) - OpenAI의 SWE(Software Engineering) AI
+- [Claude Code](https://docs.anthropic.com/en/docs/claude-code/overview) - Anthropic의 SWE(Software Engineering) Agent
+- [Codex CLI](https://github.com/openai/codex) - OpenAI의 SWE(Software Engineering) Agent
 - [Model Context Protocol](https://modelcontextprotocol.io) - Anthropic의 오픈 스탠다드
 - Claude Desktop - MCP 클라이언트 구현
 - 모든 기여자 여러분

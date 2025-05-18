@@ -294,8 +294,8 @@ API 伺服器提供以下端點：
 
 ## 🙏 致謝
 
-- [Claude Code](https://docs.anthropic.com/en/docs/claude-code/overview) - Anthropic 的 SWE（軟體工程）AI
-- [Codex CLI](https://github.com/openai/codex) - OpenAI 的 SWE（軟體工程）AI
+- [Claude Code](https://docs.anthropic.com/en/docs/claude-code/overview) - Anthropic 的 SWE（軟體工程）Agent
+- [Codex CLI](https://github.com/openai/codex) - OpenAI 的 SWE（軟體工程）Agent
 - [Model Context Protocol](https://modelcontextprotocol.io) - Anthropic 的開放標準
 - Claude Desktop - MCP 客戶端實現
 - 所有貢獻者

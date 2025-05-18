@@ -294,8 +294,8 @@ API サーバーは以下のエンドポイントを提供します：
 
 ## 🙏 謝辞
 
-- [Claude Code](https://docs.anthropic.com/en/docs/claude-code/overview) - Anthropic によるSWE(Software Engineering) AI
-- [Codex CLI](https://github.com/openai/codex) - OpenAI によるSWE(Software Engineering) AI
+- [Claude Code](https://docs.anthropic.com/en/docs/claude-code/overview) - Anthropic によるSWE(Software Engineering) Agent
+- [Codex CLI](https://github.com/openai/codex) - OpenAI によるSWE(Software Engineering) Agent
 - [Model Context Protocol](https://modelcontextprotocol.io) - Anthropic によるオープンスタンダード
 - Claude Desktop - MCP クライアント実装
 - すべてのコントリビューターの皆様

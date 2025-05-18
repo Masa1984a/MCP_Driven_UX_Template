@@ -294,8 +294,8 @@ Pull requests are welcome. For major changes, please create an issue first to di
 
 ## 🙏 Acknowledgments
 
-- [Claude Code](https://docs.anthropic.com/en/docs/claude-code/overview) - SWE (Software Engineering) AI by Anthropic
-- [Codex CLI](https://github.com/openai/codex) - SWE (Software Engineering) AI by OpenAI
+- [Claude Code](https://docs.anthropic.com/en/docs/claude-code/overview) - SWE (Software Engineering) Agent by Anthropic
+- [Codex CLI](https://github.com/openai/codex) - SWE (Software Engineering) Agent by OpenAI
 - [Model Context Protocol](https://modelcontextprotocol.io) - Open standard by Anthropic
 - Claude Desktop - MCP client implementation
 - All contributors

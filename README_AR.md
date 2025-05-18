@@ -296,8 +296,8 @@ podman compose up --build -d
 
 ## 🙏 شكر وتقدير
 
-- [Claude Code](https://docs.anthropic.com/en/docs/claude-code/overview) - ذكاء اصطناعي لهندسة البرمجيات من Anthropic
-- [Codex CLI](https://github.com/openai/codex) - ذكاء اصطناعي لهندسة البرمجيات من OpenAI
+- [Claude Code](https://docs.anthropic.com/en/docs/claude-code/overview) - وكيل هندسة البرمجيات (SWE) من Anthropic
+- [Codex CLI](https://github.com/openai/codex) - وكيل هندسة البرمجيات (SWE) من OpenAI
 - [Model Context Protocol](https://modelcontextprotocol.io) - معيار مفتوح من Anthropic
 - Claude Desktop - تنفيذ عميل MCP
 - جميع المساهمين
