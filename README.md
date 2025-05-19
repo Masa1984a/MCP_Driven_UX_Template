@@ -150,7 +150,7 @@ python -m venv .venv
 .venv\Scripts\Activate.ps1  # For Windows PowerShell
 # For Bash/Linux/Mac: source .venv/bin/activate
 python -m pip install --upgrade pip
-pip install -r requirements.txt
+ pip install -r requirements.txt
 ```
 
 6. **Claude for Desktop configuration**
@@ -171,6 +171,15 @@ Edit Claude for Desktop configuration file `claude_desktop_config.json`:
   }
 }
 ```
+
+7. **Generate SQL types**
+
+Run PgTyped to generate TypeScript types from SQL files:
+
+```bash
+npm run gen:types
+```
+
 
 **Note**: Replace `project-directory-path` with your actual project path. For Windows, backslashes in paths need to be escaped. Example: `C:\\Users\\username\\projects\\ticket-system`
 
