@@ -87,7 +87,7 @@ This repository implements a ticket management system as an example template to 
 
 ### Backend
 - **MCP Server**: Python 3.9+, MCP SDK
-- **API Server**: Node.js, TypeScript, Express
+- **API Server**: Node.js, TypeScript, Express, PgTyped
 - **Database**: PostgreSQL 16
 
 ### Infrastructure
@@ -173,6 +173,50 @@ Edit Claude for Desktop configuration file `claude_desktop_config.json`:
 ```
 
 **Note**: Replace `project-directory-path` with your actual project path. For Windows, backslashes in paths need to be escaped. Example: `C:\\Users\\username\\projects\\ticket-system`
+
+### Developer Setup for PgTyped
+
+The project uses PgTyped to provide type-safe SQL with auto-generated TypeScript types.
+
+1. **Set up DATABASE_URL environment variable**
+
+In your `.env` file, make sure `DATABASE_URL` is properly configured:
+
+```
+DATABASE_URL=postgres://postgres:postgres@db:5432/mcp_ux
+```
+
+2. **Generate types**
+
+```bash
+cd ./api
+npm run gen:types
+```
+
+3. **Development with auto-regeneration**
+
+During development, use the following command to automatically regenerate types when SQL files change:
+
+```bash
+npm run dev
+```
+
+This runs the API server with type regeneration in watch mode using concurrently.
+
+4. **Adding new SQL queries**
+
+When adding new SQL queries:
+- Create `.sql` files in the appropriate directory under `src/sql/`
+- Use the `@name` annotation to define query names
+- Run type generation to create corresponding `.types.ts` files
+- Import and use the generated types in your repository layer
+
+Example SQL file:
+```sql
+/* @name findTicketById */
+SELECT * FROM mcp_ux.tickets 
+WHERE id = :id;
+```
 
 ### Data Reset
 
