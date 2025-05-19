@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { logger } from '../utils/logger';
 import { TicketQueryParams, ChangedField } from '../types';
+import { fetchUsers } from '../repos/userRepo';
 
 /**
  * Get ticket list with filtering and pagination
@@ -755,32 +756,14 @@ export const getTicketHistory = async (req: Request, res: Response) => {
 /**
  * Get users list
  */
+
 export const getUsersList = async (req: Request, res: Response) => {
   try {
-    const client = await req.db.connect();
-    try {
-      const query = `
-        SELECT id, name, email, role
-        FROM mcp_ux.users
-        ORDER BY name ASC
-      `;
-      
-      const result = await client.query(query);
-      
-      const users = result.rows.map(row => ({
-        id: row.id,
-        name: row.name,
-        email: row.email,
-        role: row.role
-      }));
-      
-      res.json(users);
-    } finally {
-      client.release();
-    }
+    const users = await fetchUsers(req.db);
+    res.json(users);
   } catch (error) {
-    logger.error('Error getting users list', { 
-      error: error instanceof Error ? error.message : String(error) 
+    logger.error('Error getting users list', {
+      error: error instanceof Error ? error.message : String(error)
     });
     res.status(500).json({ error: 'An error occurred while retrieving users' });
   }

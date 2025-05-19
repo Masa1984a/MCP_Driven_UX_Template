@@ -172,6 +172,15 @@ Claude for Desktopの設定ファイル`claude_desktop_config.json`を編集：
 }
 ```
 
+7. **SQL型生成**
+
+PgTypedを使ってSQLファイルからTypeScript型を生成します:
+
+```bash
+npm run gen:types
+```
+
+
 **注意**: `プロジェクトディレクトリパス`は実際のプロジェクトパスに置き換えてください。Windowsの場合はパスのバックスラッシュをエスケープする必要があります。例: `C:\\Users\\username\\projects\\ticket-system`
 
 ### データのリセット
