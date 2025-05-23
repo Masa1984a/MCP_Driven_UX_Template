@@ -3,6 +3,17 @@ import { logger } from '../utils/logger';
 import { TicketQueryParams, ChangedField } from '../types';
 import { getTicketById, IGetTicketByIdResult } from '../sql/tickets/getTicketById.queries';
 import { getTicketAttachments, IGetTicketAttachmentsResult } from '../sql/tickets/getTicketAttachments.queries';
+import { getTicketList as getTicketListQuery } from '../sql/tickets/getTicketList.queries';
+import { getNextTicketSequence } from '../sql/tickets/getNextTicketSequence.queries';
+import { getNamesForIds } from '../sql/tickets/getNamesForIds.queries';
+import { createTicket as createTicketQuery } from '../sql/tickets/createTicket.queries';
+import { createTicketHistory } from '../sql/tickets/createTicketHistory.queries';
+import { checkTicketExists } from '../sql/tickets/checkTicketExists.queries';
+import { getNamesForUpdate } from '../sql/tickets/getNamesForUpdate.queries';
+import { updateTicket as updateTicketQuery } from '../sql/tickets/updateTicket.queries';
+import { createHistoryChangedFields } from '../sql/tickets/createHistoryChangedFields.queries';
+import { getHistoryChangedFields } from '../sql/tickets/getHistoryChangedFields.queries';
+import { getTicketHistory as getTicketHistoryQuery, IGetTicketHistoryResult } from '../sql/tickets/getTicketHistory.queries';
 
 /**
  * Get ticket list with filtering and pagination
@@ -34,70 +45,24 @@ export const getTicketList = async (req: Request, res: Response) => {
     // Convert sortBy if needed
     const sortBy = fieldMapping[queryParams.sortBy as string] || queryParams.sortBy;
 
-    // Build the base query
-    let query = `
-      SELECT t.id as ticket_id, t.reception_date_time, t.requestor_name, 
-             t.account_name, t.category_name, t.category_detail_name,
-             t.summary, t.person_in_charge_name, t.status_name,
-             t.scheduled_completion_date, t.external_ticket_id
-      FROM mcp_ux.tickets t
-      WHERE 1=1
-    `;
-    
-    const params: any[] = [];
-    
-    // Add filters
-    if (queryParams.personInChargeId) {
-      query += " AND t.person_in_charge_id = $" + (params.length + 1);
-      params.push(queryParams.personInChargeId);
-    }
-      
-    if (queryParams.accountId) {
-      query += " AND t.account_id = $" + (params.length + 1);
-      params.push(queryParams.accountId);
-    }
-      
-    if (queryParams.statusId) {
-      query += " AND t.status_id = $" + (params.length + 1);
-      params.push(queryParams.statusId);
-    }
-      
-    if (queryParams.scheduledCompletionDateFrom) {
-      query += " AND t.scheduled_completion_date >= $" + (params.length + 1);
-      params.push(queryParams.scheduledCompletionDateFrom);
-    }
-      
-    if (queryParams.scheduledCompletionDateTo) {
-      query += " AND t.scheduled_completion_date <= $" + (params.length + 1);
-      params.push(queryParams.scheduledCompletionDateTo);
-    }
-      
-    if (!queryParams.showCompleted) {
-      query += " AND t.status_id != 'stat4'";  // Assuming 'stat4' is the ID for completed status
-    }
-    
-    // Add search query filter
-    if (queryParams.searchQuery) {
-      query += " AND (t.summary ILIKE $" + (params.length + 1) + 
-               " OR t.account_name ILIKE $" + (params.length + 1) + 
-               " OR t.requestor_name ILIKE $" + (params.length + 1) + ")";
-      params.push(`%${queryParams.searchQuery}%`);
-    }
-    
-    // Add sorting
-    query += ` ORDER BY ${sortBy} ${queryParams.sortOrder}`;
-    
-    // Add pagination
-    query += " LIMIT $" + (params.length + 1) + " OFFSET $" + (params.length + 2);
-    params.push(queryParams.limit, queryParams.offset);
-    
-    // Execute the query
+    // Execute the query using PgTyped
     const client = await req.db.connect();
     try {
-      const result = await client.query(query, params);
+      const result = await getTicketListQuery.run({
+        personInChargeId: queryParams.personInChargeId || null,
+        accountId: queryParams.accountId || null,
+        statusId: queryParams.statusId || null,
+        scheduledCompletionDateFrom: queryParams.scheduledCompletionDateFrom || null,
+        scheduledCompletionDateTo: queryParams.scheduledCompletionDateTo || null,
+        showCompleted: queryParams.showCompleted,
+        searchQuery: queryParams.searchQuery || null,
+        sortBy: sortBy,
+        limit: queryParams.limit ? queryParams.limit.toString() : '20',
+        offset: queryParams.offset ? queryParams.offset.toString() : '0'
+      }, client);
       
       // Process results to match expected format
-      const tickets = result.rows.map(row => {
+      const tickets = result.map(row => {
         // Calculate remaining days for scheduled completion
         let remainingDays = null;
         if (row.scheduled_completion_date) {
@@ -239,8 +204,8 @@ export const createTicket = async (req: Request, res: Response) => {
     await client.query('BEGIN');
     
     // Get the next ticket ID sequence
-    const seqResult = await client.query('SELECT nextval(\'mcp_ux.ticket_id_seq\')');
-    const seqValue = seqResult.rows[0].nextval;
+    const seqResult = await getNextTicketSequence.run(undefined, client);
+    const seqValue = seqResult[0].seq_value;
     
     // Format the ticket ID as TCK-XXXX with leading zeros
     const ticketId = `TCK-${String(seqValue).padStart(4, '0')}`;
@@ -268,36 +233,24 @@ export const createTicket = async (req: Request, res: Response) => {
     } = req.body;
     
     // Get the names for the IDs from their respective tables
-    const namesQuery = `
-      SELECT 
-        (SELECT name FROM mcp_ux.users WHERE id = $1) as requestor_name,
-        (SELECT name FROM mcp_ux.accounts WHERE id = $2) as account_name,
-        (SELECT name FROM mcp_ux.categories WHERE id = $3) as category_name,
-        (SELECT name FROM mcp_ux.category_details WHERE id = $4) as category_detail_name,
-        (SELECT name FROM mcp_ux.request_channels WHERE id = $5) as request_channel_name,
-        (SELECT name FROM mcp_ux.users WHERE id = $6) as person_in_charge_name,
-        (SELECT name FROM mcp_ux.statuses WHERE id = $7) as status_name,
-        (SELECT name FROM mcp_ux.response_categories WHERE id = $8) as response_category_name
-    `;
-    
-    const namesResult = await client.query(namesQuery, [
-      requestorId, 
-      accountId, 
-      categoryId, 
-      categoryDetailId, 
-      requestChannelId, 
-      personInChargeId, 
+    const namesResult = await getNamesForIds.run({
+      requestorId,
+      accountId,
+      categoryId,
+      categoryDetailId,
+      requestChannelId,
+      personInChargeId,
       statusId,
-      responseCategoryId || null
-    ]);
+      responseCategoryId: responseCategoryId || null
+    }, client);
     
-    if (!namesResult.rows[0].requestor_name || 
-        !namesResult.rows[0].account_name || 
-        !namesResult.rows[0].category_name || 
-        !namesResult.rows[0].category_detail_name || 
-        !namesResult.rows[0].request_channel_name || 
-        !namesResult.rows[0].person_in_charge_name || 
-        !namesResult.rows[0].status_name) {
+    if (!namesResult[0].requestor_name || 
+        !namesResult[0].account_name || 
+        !namesResult[0].category_name || 
+        !namesResult[0].category_detail_name || 
+        !namesResult[0].request_channel_name || 
+        !namesResult[0].person_in_charge_name || 
+        !namesResult[0].status_name) {
       throw new Error('One or more referenced entities do not exist');
     }
     
@@ -310,69 +263,46 @@ export const createTicket = async (req: Request, res: Response) => {
       person_in_charge_name,
       status_name,
       response_category_name
-    } = namesResult.rows[0];
+    } = namesResult[0];
     
     // Insert new ticket
-    const insertQuery = `
-      INSERT INTO mcp_ux.tickets(
-        id, reception_date_time, requestor_id, requestor_name, account_id, account_name,
-        category_id, category_name, category_detail_id, category_detail_name,
-        request_channel_id, request_channel_name, summary, description,
-        person_in_charge_id, person_in_charge_name, status_id, status_name,
-        scheduled_completion_date, completion_date, actual_effort_hours,
-        response_category_id, response_category_name, response_details,
-        has_defect, external_ticket_id, remarks
-      ) VALUES (
-        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, 
-        $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27
-      ) RETURNING id
-    `;
-    
-    const insertResult = await client.query(insertQuery, [
+    const insertResult = await createTicketQuery.run({
       ticketId,
-      receptionDateTime || new Date(),
+      receptionDateTime: receptionDateTime || new Date(),
       requestorId,
-      requestor_name,
+      requestorName: requestor_name,
       accountId,
-      account_name,
+      accountName: account_name,
       categoryId,
-      category_name,
+      categoryName: category_name,
       categoryDetailId,
-      category_detail_name,
+      categoryDetailName: category_detail_name,
       requestChannelId,
-      request_channel_name,
+      requestChannelName: request_channel_name,
       summary,
       description,
       personInChargeId,
-      person_in_charge_name,
+      personInChargeName: person_in_charge_name,
       statusId,
-      status_name,
+      statusName: status_name,
       scheduledCompletionDate,
       completionDate,
       actualEffortHours,
       responseCategoryId,
-      response_category_name,
+      responseCategoryName: response_category_name,
       responseDetails,
-      hasDefect || false,
+      hasDefect: hasDefect || false,
       externalTicketId,
       remarks
-    ]);
+    }, client);
     
     // Add initial history entry
-    const historyQuery = `
-      INSERT INTO mcp_ux.ticket_history(
-        ticket_id, user_id, user_name, comment
-      ) VALUES (
-        $1, $2, $3, $4
-      )
-    `;
-    
-    await client.query(historyQuery, [
-      ticketId, 
-      personInChargeId, 
-      person_in_charge_name, 
-      'Create New Ticket.'
-    ]);
+    await createTicketHistory.run({
+      ticketId,
+      userId: personInChargeId,
+      userName: person_in_charge_name,
+      comment: 'Create New Ticket.'
+    }, client);
     
     await client.query('COMMIT');
     
@@ -402,14 +332,13 @@ export const updateTicket = async (req: Request, res: Response) => {
     const ticketId = req.params.id;
     
     // Check if ticket exists
-    const checkQuery = 'SELECT * FROM mcp_ux.tickets WHERE id = $1';
-    const checkResult = await client.query(checkQuery, [ticketId]);
+    const checkResult = await checkTicketExists.run({ ticketId }, client);
     
-    if (checkResult.rows.length === 0) {
+    if (checkResult.length === 0) {
       return res.status(404).json({ error: 'Ticket not found' });
     }
     
-    const oldTicket = checkResult.rows[0];
+    const oldTicket = checkResult[0];
     
     // Extract data from request body
     const {
@@ -435,30 +364,17 @@ export const updateTicket = async (req: Request, res: Response) => {
     } = req.body;
     
     // Get the names for the IDs from their respective tables
-    const namesQuery = `
-      SELECT 
-        (SELECT name FROM mcp_ux.users WHERE id = $1) as requestor_name,
-        (SELECT name FROM mcp_ux.accounts WHERE id = $2) as account_name,
-        (SELECT name FROM mcp_ux.categories WHERE id = $3) as category_name,
-        (SELECT name FROM mcp_ux.category_details WHERE id = $4) as category_detail_name,
-        (SELECT name FROM mcp_ux.request_channels WHERE id = $5) as request_channel_name,
-        (SELECT name FROM mcp_ux.users WHERE id = $6) as person_in_charge_name,
-        (SELECT name FROM mcp_ux.statuses WHERE id = $7) as status_name,
-        (SELECT name FROM mcp_ux.response_categories WHERE id = $8) as response_category_name,
-        (SELECT name FROM mcp_ux.users WHERE id = $9) as updated_by_name
-    `;
-    
-    const namesResult = await client.query(namesQuery, [
-      requestorId || oldTicket.requestor_id, 
-      accountId || oldTicket.account_id, 
-      categoryId || oldTicket.category_id, 
-      categoryDetailId || oldTicket.category_detail_id, 
-      requestChannelId || oldTicket.request_channel_id, 
-      personInChargeId || oldTicket.person_in_charge_id, 
-      statusId || oldTicket.status_id,
-      responseCategoryId || oldTicket.response_category_id,
+    const namesResult = await getNamesForUpdate.run({
+      requestorId: requestorId || oldTicket.requestor_id,
+      accountId: accountId || oldTicket.account_id,
+      categoryId: categoryId || oldTicket.category_id,
+      categoryDetailId: categoryDetailId || oldTicket.category_detail_id,
+      requestChannelId: requestChannelId || oldTicket.request_channel_id,
+      personInChargeId: personInChargeId || oldTicket.person_in_charge_id,
+      statusId: statusId || oldTicket.status_id,
+      responseCategoryId: responseCategoryId || oldTicket.response_category_id,
       updatedById
-    ]);
+    }, client);
     
     const {
       requestor_name,
@@ -470,7 +386,7 @@ export const updateTicket = async (req: Request, res: Response) => {
       status_name,
       response_category_name,
       updated_by_name
-    } = namesResult.rows[0];
+    } = namesResult[0];
     
     // Update ticket
     const updateQuery = `
@@ -535,22 +451,14 @@ export const updateTicket = async (req: Request, res: Response) => {
     ]);
     
     // Add history entry
-    const historyQuery = `
-      INSERT INTO mcp_ux.ticket_history(
-        ticket_id, user_id, user_name, comment
-      ) VALUES (
-        $1, $2, $3, $4
-      ) RETURNING id
-    `;
+    const historyResult = await createTicketHistory.run({
+      ticketId,
+      userId: updatedById,
+      userName: updated_by_name || 'Unknown User',
+      comment: comment || 'Ticket was updated.'
+    }, client);
     
-    const historyResult = await client.query(historyQuery, [
-      ticketId, 
-      updatedById, 
-      updated_by_name, 
-      comment || 'Ticket was updated.'
-    ]);
-    
-    const historyId = historyResult.rows[0].id;
+    const historyId = historyResult[0].id;
     
     // Track changed fields
     const changedFields: ChangedField[] = [];
@@ -587,24 +495,14 @@ export const updateTicket = async (req: Request, res: Response) => {
     
     // Record changed fields
     if (changedFields.length > 0) {
-      // Generate SQL for inserting changed fields
-      const fieldsValues = changedFields.map((field, index) => {
-        return `($1, $${index * 3 + 2}, $${index * 3 + 3}, $${index * 3 + 4})`;
-      }).join(', ');
-      
-      const fieldsParams = changedFields.flatMap(field => [
-        field.fieldName,
-        field.oldValue === null ? null : String(field.oldValue),
-        field.newValue === null ? null : String(field.newValue)
-      ]);
-      
-      const changedFieldsQuery = `
-        INSERT INTO mcp_ux.history_changed_fields(
-          history_id, field_name, old_value, new_value
-        ) VALUES ${fieldsValues}
-      `;
-      
-      await client.query(changedFieldsQuery, [historyId, ...fieldsParams]);
+      for (const field of changedFields) {
+        await createHistoryChangedFields.run({
+          historyId,
+          fieldName: field.fieldName,
+          oldValue: field.oldValue === null ? null : String(field.oldValue),
+          newValue: field.newValue === null ? null : String(field.newValue)
+        }, client);
+      }
     }
     
     await client.query('COMMIT');
@@ -633,10 +531,9 @@ export const addTicketHistory = async (req: Request, res: Response) => {
     const ticketId = req.params.id;
     
     // Check if ticket exists
-    const checkQuery = 'SELECT id FROM mcp_ux.tickets WHERE id = $1';
-    const checkResult = await client.query(checkQuery, [ticketId]);
+    const checkResult = await checkTicketExists.run({ ticketId }, client);
     
-    if (checkResult.rows.length === 0) {
+    if (checkResult.length === 0) {
       return res.status(404).json({ error: 'Ticket not found' });
     }
     
@@ -657,23 +554,15 @@ export const addTicketHistory = async (req: Request, res: Response) => {
     const userName = userResult.rows[0].name;
     
     // Add history entry
-    const historyQuery = `
-      INSERT INTO mcp_ux.ticket_history(
-        ticket_id, user_id, user_name, comment
-      ) VALUES (
-        $1, $2, $3, $4
-      ) RETURNING id
-    `;
-    
-    const historyResult = await client.query(historyQuery, [
-      ticketId, 
-      userId, 
-      userName, 
+    const historyResult = await createTicketHistory.run({
+      ticketId,
+      userId,
+      userName,
       comment
-    ]);
+    }, client);
     
     res.status(201).json({ 
-      id: historyResult.rows[0].id,
+      id: historyResult[0].id,
       message: 'History entry added successfully' 
     });
   } catch (error) {
@@ -696,24 +585,11 @@ export const getTicketHistory = async (req: Request, res: Response) => {
     const client = await req.db.connect();
     try {
       // Get history entries
-      const historyQuery = `
-        SELECT h.id, h.timestamp, h.user_id, h.user_name, h.comment
-        FROM mcp_ux.ticket_history h
-        WHERE h.ticket_id = $1
-        ORDER BY h.timestamp DESC
-      `;
-      
-      const historyResult = await client.query(historyQuery, [ticketId]);
+      const historyResult = await getTicketHistoryQuery.run({ ticketId }, client);
       
       // Get changed fields for each history entry
-      const history = await Promise.all(historyResult.rows.map(async (entry) => {
-        const changedFieldsQuery = `
-          SELECT field_name, old_value, new_value
-          FROM mcp_ux.history_changed_fields
-          WHERE history_id = $1
-        `;
-        
-        const changedFieldsResult = await client.query(changedFieldsQuery, [entry.id]);
+      const history = await Promise.all(historyResult.map(async (entry: IGetTicketHistoryResult) => {
+        const changedFieldsResult = await getHistoryChangedFields.run({ historyId: entry.id }, client);
         
         return {
           id: entry.id,
@@ -721,7 +597,7 @@ export const getTicketHistory = async (req: Request, res: Response) => {
           userId: entry.user_id,
           userName: entry.user_name,
           comment: entry.comment,
-          changedFields: changedFieldsResult.rows.map(field => ({
+          changedFields: changedFieldsResult.map(field => ({
             fieldName: field.field_name,
             oldValue: field.old_value,
             newValue: field.new_value
