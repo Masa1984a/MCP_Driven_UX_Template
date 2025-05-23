@@ -87,7 +87,7 @@
 
 ### 后端
 - **MCP Server**：Python 3.9+, MCP SDK
-- **API Server**：Node.js, TypeScript, Express
+- **API Server**：Node.js, TypeScript, Express, PgTyped
 - **Database**：PostgreSQL 16
 
 ### 基础设施
@@ -323,6 +323,13 @@ API 服务器提供以下端点：
 > **免责声明：**  
 > 本项目按「现状」分发，不提供任何形式的担保。  
 > 使用第三方服务风险自负，并受其各自条款的约束。
+
+---
+
+## 📝 变更历史
+
+- **2025-05-23**：将 SQL 查询迁移到 PgTyped 以实现类型安全的 SQL 查询
+- **2025-05-19**：初始版本发布，包含 MCP 集成、CRUD 操作和多语言支持
 
 ---
 

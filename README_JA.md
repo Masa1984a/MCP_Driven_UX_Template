@@ -87,7 +87,7 @@ Model Context Protocol（MCP）を活用し、チケット管理システムを�
 
 ### Backend
 - **MCP Server**: Python 3.9+, MCP SDK
-- **API Server**: Node.js, TypeScript, Express
+- **API Server**: Node.js, TypeScript, Express, PgTyped
 - **Database**: PostgreSQL 16
 
 ### Infrastructure
@@ -299,6 +299,11 @@ API サーバーは以下のエンドポイントを提供します：
 - [Model Context Protocol](https://modelcontextprotocol.io) - Anthropic によるオープンスタンダード
 - Claude Desktop - MCP クライアント実装
 - すべてのコントリビューターの皆様
+
+## 📅 変更履歴
+
+- **2025-05-23**: ticketController.ts内のSQLクエリをPgTypedに移行し、型安全なSQLクエリを実現。SQLファイルを分離することでコードの保守性と型安全性を向上。
+- **2025-05-19**: 初版リリース。MCP統合、CRUD操作、多言語サポートを備えた基本的なチケット管理システム。
 
 ## ⚠️ 商標・ブランドに関する注意書き
 

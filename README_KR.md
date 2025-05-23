@@ -87,7 +87,7 @@ Model Context Protocol(MCP)을 활용하여, 티켓 관리 시스템을 샘플�
 
 ### 백엔드
 - **MCP Server**: Python 3.9+, MCP SDK
-- **API Server**: Node.js, TypeScript, Express
+- **API Server**: Node.js, TypeScript, Express, PgTyped
 - **Database**: PostgreSQL 16
 
 ### 인프라
@@ -323,6 +323,13 @@ API 서버는 다음 엔드포인트를 제공합니다:
 > **Disclaimer:**  
 > This project is distributed "AS IS", without warranty of any kind.  
 > Use of third-party services is at your own risk and subject to their respective terms.
+
+---
+
+## 📝 변경 이력
+
+- **2025-05-23**: SQL 쿼리를 PgTyped로 마이그레이션하여 타입 안전 SQL 쿼리 구현
+- **2025-05-19**: MCP 통합, CRUD 작업 및 다국어 지원을 포함한 초기 릴리스
 
 ---
 
