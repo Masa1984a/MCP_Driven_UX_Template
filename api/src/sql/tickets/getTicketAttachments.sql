@@ -1,5 +1,5 @@
--- @name GetTicketAttachments
--- @param ticketId - The ID of the ticket to get attachments for
+/* @name GetTicketAttachments */
+/* @param ticketId - The ID of the ticket to get attachments for */
 SELECT 
   id,
   file_name,
@@ -7,4 +7,4 @@ SELECT
   uploaded_at
 FROM mcp_ux.attachments
 WHERE ticket_id = :ticketId!
-ORDER BY uploaded_at DESC
+ORDER BY uploaded_at DESC;

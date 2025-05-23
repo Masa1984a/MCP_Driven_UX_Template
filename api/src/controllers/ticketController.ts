@@ -1,8 +1,8 @@
 import { Request, Response } from 'express';
 import { logger } from '../utils/logger';
 import { TicketQueryParams, ChangedField } from '../types';
-// PgTyped imports (generated types will be imported here after running pgtyped)
-// import { getTicketById, getTicketAttachments } from '../sql/tickets/getTicketById.queries';
+import { getTicketById, IGetTicketByIdResult } from '../sql/tickets/getTicketById.queries';
+import { getTicketAttachments, IGetTicketAttachmentsResult } from '../sql/tickets/getTicketAttachments.queries';
 
 /**
  * Get ticket list with filtering and pagination
@@ -146,9 +146,6 @@ export const getTicketList = async (req: Request, res: Response) => {
 
 /**
  * Get ticket detail by ID
- * 
- * PgTyped implementation example - ready for when pgtyped generates the types
- * After running pgtyped, uncomment the imports at the top and the pgtyped implementation below
  */
 export const getTicketDetail = async (req: Request, res: Response) => {
   try {
@@ -157,44 +154,17 @@ export const getTicketDetail = async (req: Request, res: Response) => {
     // Execute the query
     const client = await req.db.connect();
     try {
-      // === PgTyped implementation (uncomment after running pgtyped) ===
-      // const ticketResult = await getTicketById.run({ ticketId }, client);
-      // 
-      // if (ticketResult.length === 0) {
-      //   return res.status(404).json({ error: 'Ticket not found' });
-      // }
-      // 
-      // const row = ticketResult[0];
-      // 
-      // // Get attachments using PgTyped
-      // const attachmentsResult = await getTicketAttachments.run({ ticketId }, client);
-
-      // === Current implementation (remove after pgtyped is set up) ===
-      const query = `
-        SELECT t.*
-        FROM mcp_ux.tickets t
-        WHERE t.id = $1
-      `;
+      // PgTyped implementation
+      const ticketResult = await getTicketById.run({ ticketId }, client);
       
-      const result = await client.query(query, [ticketId]);
-      
-      if (result.rows.length === 0) {
+      if (ticketResult.length === 0) {
         return res.status(404).json({ error: 'Ticket not found' });
       }
       
-      // Format the ticket data
-      const row = result.rows[0];
+      const row = ticketResult[0];
       
-      // Get attachments
-      const attachmentsQuery = `
-        SELECT id, file_name, file_url, uploaded_at
-        FROM mcp_ux.attachments
-        WHERE ticket_id = $1
-        ORDER BY uploaded_at DESC
-      `;
-      
-      const attachmentsResult = await client.query(attachmentsQuery, [ticketId]);
-      // === End of current implementation ===
+      // Get attachments using PgTyped
+      const attachmentsResult = await getTicketAttachments.run({ ticketId }, client);
       
       // Format dates (common for both implementations)
       const receptionDate = row.reception_date_time ? new Date(row.reception_date_time) : null;
@@ -210,7 +180,7 @@ export const getTicketDetail = async (req: Request, res: Response) => {
       const completionDateStr = completionDate ? 
         `${completionDate.getFullYear()}-${String(completionDate.getMonth() + 1).padStart(2, '0')}-${String(completionDate.getDate()).padStart(2, '0')}` : null;
       
-      const attachments = attachmentsResult.rows.map(attachment => ({
+      const attachments = attachmentsResult.map((attachment: IGetTicketAttachmentsResult) => ({
         id: attachment.id,
         fileName: attachment.file_name,
         fileUrl: attachment.file_url,

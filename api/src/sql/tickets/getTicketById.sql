@@ -1,5 +1,5 @@
--- @name GetTicketById
--- @param ticketId - The ID of the ticket to retrieve
+/* @name GetTicketById */
+/* @param ticketId - The ID of the ticket to retrieve */
 SELECT 
   t.id,
   t.reception_date_time,
@@ -29,4 +29,4 @@ SELECT
   t.external_ticket_id,
   t.remarks
 FROM mcp_ux.tickets t
-WHERE t.id = :ticketId!
+WHERE t.id = :ticketId!;
