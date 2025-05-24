@@ -303,7 +303,7 @@ Pull requests are welcome. For major changes, please create an issue first to di
 ## 📅 Change History
 
 - **2025-05-23**: Migrated SQL queries in ticketController.ts to PgTyped for type-safe SQL queries. Improved code maintainability and type safety by separating SQL files.
-- **2025-05-19**: Initial release. Basic ticket management system with MCP integration, CRUD operations, and multi-language support.
+- **2025-05-18**: Initial release. Basic ticket management system with MCP integration, CRUD operations, and multi-language support.
 
 ## ⚠️ Trademark and Brand Notice
 

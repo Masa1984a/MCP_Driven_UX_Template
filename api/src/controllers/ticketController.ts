@@ -14,6 +14,14 @@ import { updateTicket as updateTicketQuery } from '../sql/tickets/updateTicket.q
 import { createHistoryChangedFields } from '../sql/tickets/createHistoryChangedFields.queries';
 import { getHistoryChangedFields } from '../sql/tickets/getHistoryChangedFields.queries';
 import { getTicketHistory as getTicketHistoryQuery, IGetTicketHistoryResult } from '../sql/tickets/getTicketHistory.queries';
+import { getUserById } from '../sql/tickets/getUserById.queries';
+import { getUsersList as getUsersListQuery } from '../sql/tickets/getUsersList.queries';
+import { getAccountsList as getAccountsListQuery } from '../sql/tickets/getAccountsList.queries';
+import { getCategoriesList as getCategoriesListQuery } from '../sql/tickets/getCategoriesList.queries';
+import { getCategoryDetailsList as getCategoryDetailsListQuery } from '../sql/tickets/getCategoryDetailsList.queries';
+import { getStatusesList as getStatusesListQuery } from '../sql/tickets/getStatusesList.queries';
+import { getRequestChannelsList as getRequestChannelsListQuery } from '../sql/tickets/getRequestChannelsList.queries';
+import { getResponseCategoriesList as getResponseCategoriesListQuery } from '../sql/tickets/getResponseCategoriesList.queries';
 
 /**
  * Get ticket list with filtering and pagination
@@ -389,66 +397,34 @@ export const updateTicket = async (req: Request, res: Response) => {
     } = namesResult[0];
     
     // Update ticket
-    const updateQuery = `
-      UPDATE mcp_ux.tickets SET
-        requestor_id = COALESCE($1, requestor_id),
-        requestor_name = COALESCE($2, requestor_name),
-        account_id = COALESCE($3, account_id),
-        account_name = COALESCE($4, account_name),
-        category_id = COALESCE($5, category_id),
-        category_name = COALESCE($6, category_name),
-        category_detail_id = COALESCE($7, category_detail_id),
-        category_detail_name = COALESCE($8, category_detail_name),
-        request_channel_id = COALESCE($9, request_channel_id),
-        request_channel_name = COALESCE($10, request_channel_name),
-        summary = COALESCE($11, summary),
-        description = COALESCE($12, description),
-        person_in_charge_id = COALESCE($13, person_in_charge_id),
-        person_in_charge_name = COALESCE($14, person_in_charge_name),
-        status_id = COALESCE($15, status_id),
-        status_name = COALESCE($16, status_name),
-        scheduled_completion_date = COALESCE($17, scheduled_completion_date),
-        completion_date = COALESCE($18, completion_date),
-        actual_effort_hours = COALESCE($19, actual_effort_hours),
-        response_category_id = COALESCE($20, response_category_id),
-        response_category_name = COALESCE($21, response_category_name),
-        response_details = COALESCE($22, response_details),
-        has_defect = COALESCE($23, has_defect),
-        external_ticket_id = COALESCE($24, external_ticket_id),
-        remarks = COALESCE($25, remarks),
-        updated_at = CURRENT_TIMESTAMP
-      WHERE id = $26
-      RETURNING id
-    `;
-    
-    await client.query(updateQuery, [
+    await updateTicketQuery.run({
       requestorId,
-      requestorId ? requestor_name : null,
+      requestorName: requestorId ? requestor_name : null,
       accountId,
-      accountId ? account_name : null,
+      accountName: accountId ? account_name : null,
       categoryId,
-      categoryId ? category_name : null,
+      categoryName: categoryId ? category_name : null,
       categoryDetailId,
-      categoryDetailId ? category_detail_name : null,
+      categoryDetailName: categoryDetailId ? category_detail_name : null,
       requestChannelId,
-      requestChannelId ? request_channel_name : null,
+      requestChannelName: requestChannelId ? request_channel_name : null,
       summary,
       description,
       personInChargeId,
-      personInChargeId ? person_in_charge_name : null,
+      personInChargeName: personInChargeId ? person_in_charge_name : null,
       statusId,
-      statusId ? status_name : null,
+      statusName: statusId ? status_name : null,
       scheduledCompletionDate,
       completionDate,
       actualEffortHours,
       responseCategoryId,
-      responseCategoryId ? response_category_name : null,
+      responseCategoryName: responseCategoryId ? response_category_name : null,
       responseDetails,
       hasDefect,
       externalTicketId,
       remarks,
       ticketId
-    ]);
+    }, client);
     
     // Add history entry
     const historyResult = await createTicketHistory.run({
@@ -544,14 +520,13 @@ export const addTicketHistory = async (req: Request, res: Response) => {
     }
     
     // Get user name
-    const userQuery = 'SELECT name FROM mcp_ux.users WHERE id = $1';
-    const userResult = await client.query(userQuery, [userId]);
+    const userResult = await getUserById.run({ userId }, client);
     
-    if (userResult.rows.length === 0) {
+    if (userResult.length === 0) {
       return res.status(400).json({ error: 'User not found' });
     }
     
-    const userName = userResult.rows[0].name;
+    const userName = userResult[0].name;
     
     // Add history entry
     const historyResult = await createTicketHistory.run({
@@ -624,15 +599,9 @@ export const getUsersList = async (req: Request, res: Response) => {
   try {
     const client = await req.db.connect();
     try {
-      const query = `
-        SELECT id, name, email, role
-        FROM mcp_ux.users
-        ORDER BY name ASC
-      `;
+      const result = await getUsersListQuery.run(undefined, client);
       
-      const result = await client.query(query);
-      
-      const users = result.rows.map(row => ({
+      const users = result.map(row => ({
         id: row.id,
         name: row.name,
         email: row.email,
@@ -658,15 +627,9 @@ export const getAccountsList = async (req: Request, res: Response) => {
   try {
     const client = await req.db.connect();
     try {
-      const query = `
-        SELECT id, name, order_no
-        FROM mcp_ux.accounts
-        ORDER BY order_no ASC, name ASC
-      `;
+      const result = await getAccountsListQuery.run(undefined, client);
       
-      const result = await client.query(query);
-      
-      const accounts = result.rows.map(row => ({
+      const accounts = result.map(row => ({
         id: row.id,
         name: row.name,
         orderNo: row.order_no
@@ -691,15 +654,9 @@ export const getCategoriesList = async (req: Request, res: Response) => {
   try {
     const client = await req.db.connect();
     try {
-      const query = `
-        SELECT id, name, order_no
-        FROM mcp_ux.categories
-        ORDER BY order_no ASC, name ASC
-      `;
+      const result = await getCategoriesListQuery.run(undefined, client);
       
-      const result = await client.query(query);
-      
-      const categories = result.rows.map(row => ({
+      const categories = result.map(row => ({
         id: row.id,
         name: row.name,
         orderNo: row.order_no
@@ -726,23 +683,11 @@ export const getCategoryDetailsList = async (req: Request, res: Response) => {
     
     const client = await req.db.connect();
     try {
-      let query = `
-        SELECT id, name, category_id, category_name, order_no
-        FROM mcp_ux.category_details
-      `;
+      const result = await getCategoryDetailsListQuery.run({
+        categoryId: categoryId || null
+      }, client);
       
-      const params: any[] = [];
-      
-      if (categoryId) {
-        query += ' WHERE category_id = $1';
-        params.push(categoryId);
-      }
-      
-      query += ' ORDER BY order_no ASC, name ASC';
-      
-      const result = await client.query(query, params);
-      
-      const categoryDetails = result.rows.map(row => ({
+      const categoryDetails = result.map(row => ({
         id: row.id,
         name: row.name,
         categoryId: row.category_id,
@@ -769,15 +714,9 @@ export const getStatusesList = async (req: Request, res: Response) => {
   try {
     const client = await req.db.connect();
     try {
-      const query = `
-        SELECT id, name, order_no
-        FROM mcp_ux.statuses
-        ORDER BY order_no ASC, name ASC
-      `;
+      const result = await getStatusesListQuery.run(undefined, client);
       
-      const result = await client.query(query);
-      
-      const statuses = result.rows.map(row => ({
+      const statuses = result.map(row => ({
         id: row.id,
         name: row.name,
         orderNo: row.order_no
@@ -802,15 +741,9 @@ export const getRequestChannelsList = async (req: Request, res: Response) => {
   try {
     const client = await req.db.connect();
     try {
-      const query = `
-        SELECT id, name, order_no
-        FROM mcp_ux.request_channels
-        ORDER BY order_no ASC, name ASC
-      `;
+      const result = await getRequestChannelsListQuery.run(undefined, client);
       
-      const result = await client.query(query);
-      
-      const channels = result.rows.map(row => ({
+      const channels = result.map(row => ({
         id: row.id,
         name: row.name,
         orderNo: row.order_no
@@ -835,15 +768,9 @@ export const getResponseCategoriesList = async (req: Request, res: Response) => 
   try {
     const client = await req.db.connect();
     try {
-      const query = `
-        SELECT id, name, parent_category, order_no
-        FROM mcp_ux.response_categories
-        ORDER BY order_no ASC, name ASC
-      `;
+      const result = await getResponseCategoriesListQuery.run(undefined, client);
       
-      const result = await client.query(query);
-      
-      const responseCategories = result.rows.map(row => ({
+      const responseCategories = result.map(row => ({
         id: row.id,
         name: row.name,
         parentCategory: row.parent_category,
