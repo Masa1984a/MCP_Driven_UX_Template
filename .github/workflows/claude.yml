@@ -1,4 +1,5 @@
 name: Claude Assistant
+
 on:
   issue_comment:
     types: [created]
@@ -12,12 +13,23 @@ on:
 jobs:
   claude-response:
     runs-on: ubuntu-latest
+    permissions:          # ← 追加
+      contents: write
+      issues: write
+      pull-requests: write
+
     steps:
-      - uses: anthropics/claude-code-action@beta
+      - name: Checkout repository          # ← 追加
+        uses: actions/checkout@v4
+
+      - name: Set up Bun                   # 既存
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.2.11"
+
+      - name: Run Claude Code Action       # 既存
+        uses: anthropics/claude-code-action@beta
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          # Optional: add custom trigger phrase (default: @claude)
-          # trigger_phrase: "/claude"
-          # Optional: add assignee trigger for issues
-          # assignee_trigger: "claude"
+          trigger_phrase: "@claude"            # 好きなフレーズに変更可
