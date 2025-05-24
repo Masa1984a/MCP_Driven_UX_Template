@@ -272,6 +272,25 @@ This template can be extended with:
 - **Reporting features**: PDF generation, dashboards
 - **Multi-language support**: i18n implementation
 
+## 📊 Table Column Management
+
+This project uses a centralized markdown table generation system for consistent formatting across all tools.
+
+### Adding or Modifying Table Columns
+
+When you need to add or modify table columns:
+
+1. **For ticket tables**: Update the `tickets_to_md_table()` function in `mcp_server/utils/markdown.py`
+2. **For other data types**: Update the corresponding function (e.g., `users_to_md_table()`, `accounts_to_md_table()`)
+3. **Run tests**: Execute `python -m pytest tests/test_markdown.py` to verify changes
+4. **Update tests**: Modify test cases in `tests/test_markdown.py` if column structure changes
+
+This centralized approach ensures:
+- **Consistency**: All table formatting uses the same GitHub-style markdown
+- **Maintainability**: Column changes only require updates in one location
+- **Type safety**: Uses `tabulate` library for reliable table generation
+- **Testing**: Unit tests verify column order and data formatting remain consistent
+
 ## 🤝 Contribution
 
 Pull requests are welcome. For major changes, please create an issue first to discuss.

@@ -18,6 +18,11 @@ from contextlib import asynccontextmanager
 from collections.abc import AsyncIterator
 from dataclasses import dataclass
 from typing import Dict, List, Optional, Any, Union
+from utils.markdown import (
+    tickets_to_md_table, users_to_md_table, accounts_to_md_table,
+    categories_to_md_table, category_details_to_md_table, statuses_to_md_table,
+    request_channels_to_md_table
+)
 
 # Configure logging
 logging.basicConfig(
@@ -132,23 +137,8 @@ def get_ticket_list(
         # Parse response
         tickets = response.json()
         
-        # Format as a table
-        if not tickets:
-            return "No tickets found matching the criteria."
-        
-        output = "# Ticket List\n\n"
-        output += "| ID | Reception Date | Account/Requestor | Category/Detail | Summary | Person in Charge | Status | Scheduled Date/Remaining |\n"
-        output += "|---|---|---|---|---|---|---|---|\n"
-        
-        for t in tickets:
-            remaining = f"{t.get('remainingDays')} days left" if t.get('remainingDays') is not None else ""
-            scheduled = f"{t.get('scheduledCompletionDate')} {remaining}" if t.get('scheduledCompletionDate') else ""
-            
-            output += f"| {t.get('ticketId')} | {t.get('receptionDateTime')} | {t.get('accountName')}/{t.get('requestorName')} | "
-            output += f"{t.get('categoryName')}/{t.get('categoryDetailName')} | {t.get('summary')} | "
-            output += f"{t.get('personInChargeName')} | {t.get('statusName')} | {scheduled} |\n"
-        
-        return output
+        # Format as a table using utilities
+        return tickets_to_md_table(tickets)
     
     except requests.exceptions.RequestException as e:
         return f"API request error: {str(e)}"
@@ -661,18 +651,8 @@ def get_users(
         # Parse response
         users = response.json()
         
-        # Format as markdown
-        if not users:
-            return "No users registered."
-        
-        output = "# User List\n\n"
-        output += "| ID | Name | Email Address | Role |\n"
-        output += "|---|---|---|---|\n"
-        
-        for user in users:
-            output += f"| {user.get('id', '')} | {user.get('name', '')} | {user.get('email', '')} | {user.get('role', '')} |\n"
-        
-        return output
+        # Format as markdown using utilities
+        return users_to_md_table(users)
     
     except requests.exceptions.RequestException as e:
         return f"API request error: {str(e)}"
@@ -706,18 +686,8 @@ def get_accounts(ctx: Context = None) -> str:
         # Parse response
         accounts = response.json()
         
-        # Format as markdown
-        if not accounts:
-            return "No accounts registered."
-        
-        output = "# Account List\n\n"
-        output += "| ID | Account Name |\n"
-        output += "|---|---|\n"
-        
-        for account in accounts:
-            output += f"| {account.get('id', '')} | {account.get('name', '')} |\n"
-        
-        return output
+        # Format as markdown using utilities
+        return accounts_to_md_table(accounts)
     
     except requests.exceptions.RequestException as e:
         return f"API request error: {str(e)}"
@@ -751,18 +721,8 @@ def get_categories(ctx: Context = None) -> str:
         # Parse response
         categories = response.json()
         
-        # Format as markdown
-        if not categories:
-            return "No categories registered."
-        
-        output = "# Category List\n\n"
-        output += "| ID | Category Name |\n"
-        output += "|---|---|\n"
-        
-        for category in categories:
-            output += f"| {category.get('id', '')} | {category.get('name', '')} |\n"
-        
-        return output
+        # Format as markdown using utilities
+        return categories_to_md_table(categories)
     
     except requests.exceptions.RequestException as e:
         return f"API request error: {str(e)}"
@@ -808,18 +768,8 @@ def get_category_details(
         # Parse response
         category_details = response.json()
         
-        # Format as markdown
-        if not category_details:
-            return "No category details registered."
-        
-        output = "# Category Detail List\n\n"
-        output += "| ID | Detail Name | Parent Category |\n"
-        output += "|---|---|---|\n"
-        
-        for detail in category_details:
-            output += f"| {detail.get('id', '')} | {detail.get('name', '')} | {detail.get('categoryName', '')} |\n"
-        
-        return output
+        # Format as markdown using utilities
+        return category_details_to_md_table(category_details)
     
     except requests.exceptions.RequestException as e:
         return f"API request error: {str(e)}"
@@ -853,18 +803,8 @@ def get_statuses(ctx: Context = None) -> str:
         # Parse response
         statuses = response.json()
         
-        # Format as markdown
-        if not statuses:
-            return "No statuses registered."
-        
-        output = "# Status List\n\n"
-        output += "| ID | Status Name |\n"
-        output += "|---|---|\n"
-        
-        for status in statuses:
-            output += f"| {status.get('id', '')} | {status.get('name', '')} |\n"
-        
-        return output
+        # Format as markdown using utilities
+        return statuses_to_md_table(statuses)
     
     except requests.exceptions.RequestException as e:
         return f"API request error: {str(e)}"
@@ -897,18 +837,8 @@ def get_request_channels(ctx: Context = None) -> str:
         # Parse response
         channels = response.json()
         
-        # Format as markdown
-        if not channels:
-            return "No request channels registered."
-        
-        output = "# Request Channel List\n\n"
-        output += "| ID | Channel Name |\n"
-        output += "|---|---|\n"
-        
-        for channel in channels:
-            output += f"| {channel.get('id', '')} | {channel.get('name', '')} |\n"
-        
-        return output
+        # Format as markdown using utilities
+        return request_channels_to_md_table(channels)
     
     except requests.exceptions.RequestException as e:
         return f"API request error: {str(e)}"
