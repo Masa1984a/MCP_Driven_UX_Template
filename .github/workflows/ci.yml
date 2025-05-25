@@ -76,7 +76,7 @@ jobs:
       working-directory: ./api
       run: |
         npm ci
-        npm run build
+        npm run build:ci
 
     - name: Build Docker images
       run: |
