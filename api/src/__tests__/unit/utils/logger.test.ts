@@ -1,4 +1,3 @@
-import winston from 'winston';
 import { logger } from '../../../utils/logger';
 
 describe('Logger', () => {
