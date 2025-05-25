@@ -444,8 +444,8 @@ export const updateTicket = async (req: Request, res: Response) => {
       if (newValue !== undefined && newValue !== null && oldValue !== newValue) {
         changedFields.push({
           fieldName: displayFieldName || fieldName,
-          oldValue: oldValue,
-          newValue: newValue
+          oldValue: String(oldValue ?? ''),
+          newValue: String(newValue)
         });
       }
     };
