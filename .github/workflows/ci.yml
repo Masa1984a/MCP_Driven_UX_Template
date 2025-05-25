@@ -45,7 +45,7 @@ jobs:
       working-directory: ./api
       run: npm run lint
 
-    - name: Run tests
+    - name: Run tests with coverage
       working-directory: ./api
       env:
         DB_HOST: localhost
@@ -54,7 +54,7 @@ jobs:
         DB_USER: test_user
         DB_PASSWORD: test_password
         NODE_ENV: test
-      run: npm test
+      run: npm test -- --coverage
 
     - name: Upload coverage reports
       uses: actions/upload-artifact@v4
