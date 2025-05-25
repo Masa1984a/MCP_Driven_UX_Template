@@ -72,10 +72,15 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
+    - name: Setup build environment
+      working-directory: ./api
+      run: |
+        # Create dummy query files for CI
+        node scripts/generate-dummy-queries.js
+    
     - name: Build API TypeScript
       working-directory: ./api
       run: |
-        npm ci
         npm run build:ci
 
     - name: Build Docker images
