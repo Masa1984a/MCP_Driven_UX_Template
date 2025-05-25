@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { logger } from '../utils/logger';
 import { TicketQueryParams, ChangedField } from '../types';
-import { getTicketById, IGetTicketByIdResult } from '../sql/tickets/getTicketById.queries';
+import { getTicketById } from '../sql/tickets/getTicketById.queries';
 import { getTicketAttachments, IGetTicketAttachmentsResult } from '../sql/tickets/getTicketAttachments.queries';
 import { getTicketList as getTicketListQuery } from '../sql/tickets/getTicketList.queries';
 import { getNextTicketSequence } from '../sql/tickets/getNextTicketSequence.queries';
@@ -274,7 +274,7 @@ export const createTicket = async (req: Request, res: Response) => {
     } = namesResult[0];
     
     // Insert new ticket
-    const insertResult = await createTicketQuery.run({
+    await createTicketQuery.run({
       ticketId,
       receptionDateTime: receptionDateTime || new Date(),
       requestorId,
@@ -440,7 +440,7 @@ export const updateTicket = async (req: Request, res: Response) => {
     const changedFields: ChangedField[] = [];
     
     // Helper function to check for changes
-    const checkAndAddChange = (fieldName: string, oldValue: any, newValue: any, displayFieldName?: string) => {
+    const checkAndAddChange = (fieldName: string, oldValue: unknown, newValue: unknown, displayFieldName?: string) => {
       if (newValue !== undefined && newValue !== null && oldValue !== newValue) {
         changedFields.push({
           fieldName: displayFieldName || fieldName,
