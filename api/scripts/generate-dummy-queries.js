@@ -70,7 +70,7 @@ export interface I${pascalName}Result {
 }
 
 export const ${camelName} = {
-  run: async (params: I${pascalName}Params, client?: any): Promise<I${pascalName}Result[]> => {
+  run: async (params?: I${pascalName}Params, client?: any): Promise<I${pascalName}Result[]> => {
     return [];
   }
 };

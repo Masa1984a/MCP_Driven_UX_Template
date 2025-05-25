@@ -72,6 +72,17 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: api/package-lock.json
+
+    - name: Install dependencies
+      working-directory: ./api
+      run: npm ci
+
     - name: Setup build environment
       working-directory: ./api
       run: |
@@ -80,8 +91,7 @@ jobs:
     
     - name: Build API TypeScript
       working-directory: ./api
-      run: |
-        npm run build:ci
+      run: npm run build:ci
 
     - name: Build Docker images
       run: |
