@@ -93,6 +93,11 @@ jobs:
       working-directory: ./api
       run: npm run build:ci
 
+    - name: Setup environment
+      run: |
+        cp .env.sample .env
+        echo "Environment file created from .env.sample"
+
     - name: Build Docker images
       run: |
         docker compose build
@@ -100,9 +105,10 @@ jobs:
     - name: Verify Docker build
       run: |
         echo "Built images:"
-        docker images
-        echo "Docker compose services:"
-        docker compose ps
+        docker images | grep -E "(REPOSITORY|mcp_driven_ux|postgres)"
+        echo ""
+        echo "Docker compose configuration:"
+        docker compose config --services
 
   security-scan:
     name: Security Scan
