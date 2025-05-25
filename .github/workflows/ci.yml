@@ -97,18 +97,12 @@ jobs:
       run: |
         docker compose build
 
-    - name: Save Docker images
+    - name: Verify Docker build
       run: |
-        docker save -o images.tar \
-          postgres:16 \
-          $(docker compose config --images | grep -v postgres)
-
-    - name: Upload Docker images
-      uses: actions/upload-artifact@v4
-      with:
-        name: docker-images
-        path: images.tar
-        retention-days: 1
+        echo "Built images:"
+        docker images
+        echo "Docker compose services:"
+        docker compose ps
 
   security-scan:
     name: Security Scan
