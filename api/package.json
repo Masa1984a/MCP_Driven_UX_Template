@@ -13,7 +13,7 @@
     "test": "jest",
     "pgtyped": "pgtyped -c pgtyped.config.json",
     "prebuild": "npm run pgtyped",
-    "build:ci": "tsc"
+    "build:ci": "tsc -p tsconfig.build.json"
   },
   "dependencies": {
     "@google-cloud/functions-framework": "^3.3.0",
