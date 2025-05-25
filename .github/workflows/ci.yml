@@ -1,0 +1,111 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_DB: test_mcp_ux
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: api/package-lock.json
+
+    - name: Install dependencies
+      working-directory: ./api
+      run: npm ci
+
+    - name: Run linter
+      working-directory: ./api
+      run: npm run lint
+
+    - name: Run tests
+      working-directory: ./api
+      env:
+        DB_HOST: localhost
+        DB_PORT: 5432
+        DB_NAME: test_mcp_ux
+        DB_USER: test_user
+        DB_PASSWORD: test_password
+        NODE_ENV: test
+      run: npm test
+
+    - name: Upload coverage reports
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: coverage-report
+        path: api/coverage/
+
+  build:
+    name: Build and Validate
+    runs-on: ubuntu-latest
+    needs: test
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Build API TypeScript
+      working-directory: ./api
+      run: |
+        npm ci
+        npm run build
+
+    - name: Build Docker images
+      run: |
+        docker-compose build
+
+    - name: Save Docker images
+      run: |
+        docker save -o images.tar \
+          postgres:16 \
+          api-functions-new:latest
+
+    - name: Upload Docker images
+      uses: actions/upload-artifact@v3
+      with:
+        name: docker-images
+        path: images.tar
+        retention-days: 1
+
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    needs: test
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Run npm audit
+      working-directory: ./api
+      run: |
+        npm ci
+        npm audit --production
