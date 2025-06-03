@@ -263,6 +263,73 @@ API 서버는 다음 엔드포인트를 제공합니다:
   - Container Instances
   - Azure Database for PostgreSQL
 
+Azure 배포에 대해서는 [Azure 배포 가이드](azure-deploy/Guidebook_Azure.md)를 참조하세요
+
+## ☁️ Azure 클라우드 환경
+
+### 아키텍처 개요
+
+MCP Driven UX 템플릿은 프로덕션 사용을 위해 Microsoft Azure에 배포할 수 있으며, 확장 가능한 클라우드 네이티브 아키텍처를 제공합니다:
+
+```
+┌─────────────────┐    MCP(STDIO)    ┌─────────────────┐    HTTP/API    ┌──────────────────┐
+│  Claude Desktop │◄────────────────►│   MCP Server    │◄──────────────►│  Azure Container │
+│    (로컬 PC)     │                  │ (로컬 Python)    │                │   Instances      │
+└─────────────────┘                  └─────────────────┘                └─────────┬────────┘
+                                                                                   │
+                                                                                   ▼
+┌──────────────────────────────────────────────────────────────────────────────────┐
+│                           Azure 클라우드 환경                                     │
+│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐                │
+│  │   Key Vault     │  │    Container    │  │   PostgreSQL    │                │
+│  │    (비밀)       │  │    Registry     │  │  Flexible Server│                │
+│  └─────────────────┘  │     (ACR)       │  │   (데이터베이스)  │                │
+│                       └─────────────────┘  └─────────────────┘                │
+│                                                                                │
+│  ┌─────────────────┐                                                           │
+│  │ Managed Identity│  ← 안전한 서비스 간 인증                                    │
+│  │    (보안)       │                                                           │
+│  └─────────────────┘                                                           │
+└──────────────────────────────────────────────────────────────────────────────────┘
+```
+
+### 현재 Azure 구성
+
+템플릿은 다음 구성 요소로 유연한 배포를 위해 설계되었습니다:
+
+#### 핵심 서비스
+- **Azure Container Instances**: Node.js/TypeScript API 서버 호스팅
+- **Azure Database for PostgreSQL**: 영구 데이터 저장을 위한 Flexible Server
+- **Azure Container Registry (ACR)**: 컨테이너 이미지를 위한 프라이빗 레지스트리
+- **Azure Key Vault**: API 키와 데이터베이스 자격 증명의 안전한 저장
+- **Managed Identity**: 하드코딩된 비밀 없는 서비스 간 인증
+
+#### 보안 기능
+- 모든 민감한 데이터는 Azure Key Vault에 저장
+- 안전한 서비스 인증을 위한 Managed Identity
+- 외부 액세스를 위한 API 키 기반 인증
+- Azure의 내장 방화벽 규칙을 통한 네트워크 보안
+- Application Gateway를 통한 HTTPS/SSL 지원 (선택사항)
+
+#### 확장성 및 관리
+- 다중 환경 배포를 위한 환경 변수 기반 구성
+- 간소화된 배포를 위한 PowerShell 자동화 스크립트
+- 중앙화된 로깅 및 모니터링 기능
+- 일관된 관리를 위한 리소스 명명 규칙
+
+### 배포 가이드
+
+Azure 환경에 대한 완전한 단계별 배포 지침은 다음을 참조하세요:
+**[Azure 배포 가이드](azure-deploy/Guidebook_Azure.md)**
+
+가이드에서 다루는 내용:
+- 전제 조건 및 환경 설정
+- 자동화된 리소스 프로비저닝
+- 컨테이너 이미지 빌드 및 배포
+- Azure API와 MCP Server 통합
+- 보안 구성 및 모범 사례
+- 문제 해결 및 유지 관리
+
 ## 🧩 확장성
 
 이 템플릿은 다음과 같은 확장이 가능합니다:

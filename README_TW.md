@@ -263,6 +263,73 @@ API 伺服器提供以下端點：
   - Container Instances
   - Azure Database for PostgreSQL
 
+關於Azure部署，請參閱我們的 [Azure 部署指南](azure-deploy/Guidebook_Azure.md)
+
+## ☁️ Azure 雲端環境
+
+### 架構概述
+
+MCP Driven UX 模板可以部署到 Microsoft Azure 用於生產環境，提供可擴展的雲原生架構：
+
+```
+┌─────────────────┐    MCP(STDIO)    ┌─────────────────┐    HTTP/API    ┌──────────────────┐
+│  Claude Desktop │◄────────────────►│   MCP Server    │◄──────────────►│  Azure Container │
+│    (本機PC)      │                  │  (本機Python)    │                │   Instances      │
+└─────────────────┘                  └─────────────────┘                └─────────┬────────┘
+                                                                                   │
+                                                                                   ▼
+┌──────────────────────────────────────────────────────────────────────────────────┐
+│                            Azure 雲端環境                                        │
+│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐                │
+│  │   Key Vault     │  │    Container    │  │   PostgreSQL    │                │
+│  │    (密鑰)       │  │    Registry     │  │  Flexible Server│                │
+│  └─────────────────┘  │     (ACR)       │  │    (資料庫)      │                │
+│                       └─────────────────┘  └─────────────────┘                │
+│                                                                                │
+│  ┌─────────────────┐                                                           │
+│  │ Managed Identity│  ← 安全的服務間身份驗證                                     │
+│  │    (安全性)      │                                                           │
+│  └─────────────────┘                                                           │
+└──────────────────────────────────────────────────────────────────────────────────┘
+```
+
+### 目前的 Azure 配置
+
+模板設計為使用以下元件進行彈性部署：
+
+#### 核心服務
+- **Azure Container Instances**: 託管 Node.js/TypeScript API 伺服器
+- **Azure Database for PostgreSQL**: 用於持久資料儲存的 Flexible Server
+- **Azure Container Registry (ACR)**: 容器映像的私人註冊表
+- **Azure Key Vault**: API 金鑰和資料庫憑證的安全儲存
+- **Managed Identity**: 無硬編碼密鑰的服務間身份驗證
+
+#### 安全功能
+- 所有敏感資料儲存在 Azure Key Vault 中
+- 使用 Managed Identity 進行安全服務身份驗證
+- 基於 API 金鑰的外部存取身份驗證
+- 透過 Azure 內建防火牆規則實現網路安全
+- 透過 Application Gateway 支援 HTTPS/SSL（選用）
+
+#### 可擴展性和管理
+- 基於環境變數的多環境部署配置
+- 用於簡化部署的 PowerShell 自動化腳本
+- 集中式日誌和監控功能
+- 一致管理的資源命名慣例
+
+### 部署指南
+
+關於 Azure 環境的完整逐步部署說明，請參閱：
+**[Azure 部署指南](azure-deploy/Guidebook_Azure.md)**
+
+該指南涵蓋：
+- 先決條件和環境設定
+- 自動化資源配置
+- 容器映像建置和部署
+- MCP Server 與 Azure API 的整合
+- 安全配置和最佳實務
+- 故障排除和維護
+
 ## 🧩 可擴展性
 
 此模板可以進行以下擴展：

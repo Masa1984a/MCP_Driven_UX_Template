@@ -2,6 +2,7 @@ import express from 'express';
 import { Pool } from 'pg';
 import { logger } from './utils/logger';
 import { ticketRoutes } from './routes/ticketRoutes';
+import { authenticateAPIKey, logAPIUsage } from './middleware/auth';
 import dotenv from 'dotenv';
 
 // Load environment variables from .env file
@@ -17,7 +18,8 @@ const pool = new Pool({
   port: parseInt(process.env.DB_PORT || '5432'),
   database: process.env.DB_NAME || 'mcp_ux',
   user: process.env.DB_USER || 'postgres',
-  password: process.env.DB_PASSWORD || 'postgres'
+  password: process.env.DB_PASSWORD || 'postgres',
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
 });
 
 // Test database connection
@@ -39,13 +41,19 @@ app.use((req, res, next) => {
 // Enable CORS
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, x-api-key');
   if (req.method === 'OPTIONS') {
     res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH');
     return res.status(200).json({});
   }
   next();
 });
+
+// Apply authentication middleware
+app.use(authenticateAPIKey);
+
+// Optional: Apply API usage logging
+app.use(logAPIUsage);
 
 // Register routes
 app.use('/tickets', ticketRoutes);

@@ -9,9 +9,9 @@ services:
     env_file:
       - ./.env
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: mcp_ux
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+      POSTGRES_DB: ${DB_NAME:-mcp_ux}
     ports:
       - "5432:5432"
     volumes:
@@ -30,8 +30,9 @@ services:
     env_file:
       - ./.env
     environment:
-      NODE_ENV: development
-      LOG_LEVEL: info
+      NODE_ENV: ${NODE_ENV:-development}
+      DISABLE_AUTH: ${DISABLE_AUTH:-true}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
     ports:
       - "8080:8080"
     volumes:
@@ -43,6 +44,7 @@ services:
       - db
     networks:
       - app-network
+  
 
 volumes:
   postgres_data:

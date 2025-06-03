@@ -25,7 +25,41 @@ Thumbs.db
 .vscode/
 .idea/
 
+# Environment files
 .env
+.env.*
+!.env.example
+.env.local
+
+# API specific
 api/node_modules/
 api/build/
-aip/.env
+api/.env
+
+# Temporary files
+*-temp.yaml
+*-temp.yml
+*_detail.json
+
+# Certificates and keys
+*.pfx
+*.pem
+*.crt
+*.key
+*.p12
+
+# Backup files
+*.backup
+*.bak
+*.old
+
+# Log files
+*.log
+logs/
+
+deploy-manual.yaml
+deploy-custom.yaml
+deploy-*-temp.yaml
+
+claude_desktop_config_azure.json
+mcp_server/.env

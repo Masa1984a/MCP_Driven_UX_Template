@@ -9,8 +9,11 @@ RUN npm install
 # Copy source code
 COPY . .
 
+# Build TypeScript without pgtyped
+RUN npm run build:ci
+
 # Expose the API port
 EXPOSE 8080
 
-# Build and start the application
-CMD sh -c "npm run build && node build/src/index.js"
+# Start the application
+CMD ["node", "build/src/index.js"]

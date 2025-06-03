@@ -154,7 +154,21 @@ python -m pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-6. **Claude for Desktop configuration**
+6. **API Key configuration (for local MCP server)**
+
+When running MCP server locally, you need to set the API key:
+
+```powershell
+# Option 1: Use PowerShell script to set environment variable
+.\Script\Set-MCP-Environment.ps1 -ApiKey "your-api-key-here"
+
+# Option 2: Update Claude Desktop config with API key
+.\Script\Update-ClaudeDesktopConfig.ps1 -ApiKey "your-api-key-here"
+```
+
+**Note**: Never commit the API key to the repository. Store it securely.
+
+7. **Claude for Desktop configuration**
 
 Edit Claude for Desktop configuration file `claude_desktop_config.json`:
 
@@ -260,8 +274,75 @@ This application can be deployed to the following platforms (verification requir
 
 - **Azure**
   - Functions
-  - Container Instances
+  - Container Instances  
   - Azure Database for PostgreSQL
+
+For Azure deployment, see our [Azure Deployment Guide](azure-deploy/Guidebook_Azure.md)
+
+## ☁️ Azure Cloud Environment
+
+### Architecture Overview
+
+The MCP Driven UX Template can be deployed to Microsoft Azure for production use, providing a scalable cloud-native architecture:
+
+```
+┌─────────────────┐    MCP(STDIO)    ┌─────────────────┐    HTTP/API    ┌──────────────────┐
+│  Claude Desktop │◄────────────────►│   MCP Server    │◄──────────────►│  Azure Container │
+│   (Local PC)    │                  │  (Local Python) │                │   Instances      │
+└─────────────────┘                  └─────────────────┘                └─────────┬────────┘
+                                                                                   │
+                                                                                   ▼
+┌──────────────────────────────────────────────────────────────────────────────────┐
+│                           Azure Cloud Environment                                │
+│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐                │
+│  │   Key Vault     │  │    Container    │  │   PostgreSQL    │                │
+│  │   (Secrets)     │  │    Registry     │  │  Flexible Server│                │
+│  └─────────────────┘  │     (ACR)       │  │   (Database)    │                │
+│                       └─────────────────┘  └─────────────────┘                │
+│                                                                                │
+│  ┌─────────────────┐                                                           │
+│  │ Managed Identity│  ← Secure service-to-service authentication               │
+│  │   (Security)    │                                                           │
+│  └─────────────────┘                                                           │
+└──────────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Current Azure Configuration
+
+The template is designed for flexible deployment with the following components:
+
+#### Core Services
+- **Azure Container Instances**: Hosts the Node.js/TypeScript API server
+- **Azure Database for PostgreSQL**: Flexible server for persistent data storage  
+- **Azure Container Registry (ACR)**: Private registry for container images
+- **Azure Key Vault**: Secure storage for API keys and database credentials
+- **Managed Identity**: Service-to-service authentication without hardcoded secrets
+
+#### Security Features
+- All sensitive data stored in Azure Key Vault
+- Managed Identity for secure service authentication
+- API key-based authentication for external access
+- Network security through Azure's built-in firewall rules
+- HTTPS/SSL support via Application Gateway (optional)
+
+#### Scalability & Management
+- Environment variable-based configuration for multi-environment deployment
+- PowerShell automation scripts for streamlined deployment
+- Centralized logging and monitoring capabilities
+- Resource naming conventions for consistent management
+
+### Deployment Guide
+
+For complete step-by-step Azure deployment instructions, see:
+**[Azure Deployment Guide](azure-deploy/Guidebook_Azure.md)**
+
+The guide covers:
+- Prerequisites and environment setup
+- Automated resource provisioning
+- Container image building and deployment
+- MCP Server integration with Azure API
+- Security configuration and best practices
+- Troubleshooting and maintenance
 
 ## 🧩 Extensibility
 

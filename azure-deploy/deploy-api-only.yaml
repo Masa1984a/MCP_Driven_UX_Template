@@ -1,0 +1,55 @@
+apiVersion: 2019-12-01
+location: {LOCATION}
+name: {PREFIX}-containers
+identity:
+  type: UserAssigned
+  userAssignedIdentities:
+    /subscriptions/a249a10e-4426-42a1-a459-7bd91688e436/resourcegroups/rg-{PREFIX}/providers/Microsoft.ManagedIdentity/userAssignedIdentities/{PREFIX}-identity: {}
+properties:
+  containers:
+  - name: api-server
+    properties:
+      image: {PREFIX}acr.azurecr.io/api-server:auth-v2
+      ports:
+      - port: 8080
+        protocol: TCP
+      resources:
+        requests:
+          cpu: 0.5
+          memoryInGB: 1
+      environmentVariables:
+      - name: NODE_ENV
+        value: production
+      - name: LOG_LEVEL
+        value: info
+      - name: PORT
+        value: '8080'
+      - name: DB_HOST
+        value: {PREFIX}-db.postgres.database.azure.com
+      - name: DB_PORT
+        value: '5432'
+      - name: DB_NAME
+        value: mcp_ux
+      - name: DB_USER
+        value: pgadmin
+      - name: DB_PASSWORD
+        secureValue: DB_PASSWORD_PLACEHOLDER
+      - name: API_KEY
+        secureValue: API_KEY_PLACEHOLDER
+      - name: AZURE_CLIENT_ID
+        value: 53a2f7bd-9acf-4792-85e4-fde7c3ff58eb
+  
+  imageRegistryCredentials:
+  - server: {PREFIX}acr.azurecr.io
+    username: {PREFIX}acr
+    password: ACR_PASSWORD_PLACEHOLDER
+  
+  ipAddress:
+    type: Public
+    ports:
+    - port: 8080
+      protocol: TCP
+    dnsNameLabel: {PREFIX}-mcp
+  
+  osType: Linux
+  restartPolicy: Always

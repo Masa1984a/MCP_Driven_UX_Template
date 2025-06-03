@@ -1,0 +1,24 @@
+# Azure Deployment Configuration Template
+# Copy this file to deploy-config.yaml and update the values for your environment
+
+project:
+  # Prefix for all Azure resource names (e.g., "ticket-system", "myproject")
+  prefix: "ticket-system"
+  
+  # Azure region for deployment (e.g., "japaneast", "eastus", "westeurope")
+  location: "japaneast"
+
+# Resource names will be generated as follows:
+# - Resource Group: rg-{prefix}
+# - Container Registry: {prefix}acr
+# - Key Vault: {prefix}-keyvault
+# - Container Instance: {prefix}-containers
+# - DNS Label: {prefix}-mcp
+# - Database: {prefix}-db
+# - Virtual Network: {prefix}-vnet
+# - Application Gateway: {prefix}-appgw
+# - Public IP: {prefix}-appgw-pip
+#
+# URLs will be generated as:
+# - API URL: http://{prefix}-mcp.{location}.azurecontainer.io:8080
+# - Health Check: http://{prefix}-mcp.{location}.azurecontainer.io:8080/health

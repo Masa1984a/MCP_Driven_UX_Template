@@ -18,6 +18,10 @@ from contextlib import asynccontextmanager
 from collections.abc import AsyncIterator
 from dataclasses import dataclass
 from typing import Dict, List, Optional, Any, Union
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Configure logging
 logging.basicConfig(
@@ -30,17 +34,25 @@ logger = logging.getLogger('mcp_ticket_server')
 @dataclass
 class AppContext:
     api_base_url: str
+    api_key: Optional[str] = None
 
 @asynccontextmanager
 async def app_lifespan(server: FastMCP) -> AsyncIterator[AppContext]:
     """Manage API connection lifecycle"""
     # Get API base URL from environment or use default
     api_base_url = os.environ.get('API_BASE_URL', 'http://localhost:8080')
+    api_key = os.environ.get('API_KEY')
+    
     logger.info(f"Using API base URL: {api_base_url}")
+    if api_key:
+        logger.info("API key configured for authentication")
+    else:
+        logger.warning("API_KEY not configured - requests may fail if API requires authentication")
     
     # Test API connection
     try:
-        response = requests.get(f"{api_base_url}/health")
+        headers = {'x-api-key': api_key} if api_key else {}
+        response = requests.get(f"{api_base_url}/health", headers=headers)
         response.raise_for_status()  # Raise exception for non-200 status codes
         logger.info(f"Successfully connected to API at {api_base_url}")
     except Exception as e:
@@ -48,7 +60,7 @@ async def app_lifespan(server: FastMCP) -> AsyncIterator[AppContext]:
         logger.warning("API operations may fail if the connection is not available")
     
     try:
-        yield AppContext(api_base_url=api_base_url)
+        yield AppContext(api_base_url=api_base_url, api_key=api_key)
     finally:
         logger.info("Shutting down API connection")
 
@@ -60,6 +72,20 @@ mcp = FastMCP(
     description="Ticket Management System - MCP server for executing various ticket operations",
     log_level="INFO"  # Directly specified with uppercase literal
 )
+
+# Helper function to get API headers
+def get_api_headers(ctx: Context) -> Dict[str, str]:
+    """Get headers for API requests including authentication"""
+    headers = {'Content-Type': 'application/json'}
+    
+    # Only add API key in production environment
+    node_env = os.environ.get('NODE_ENV', 'development')
+    if node_env == 'production' and hasattr(ctx.request_context.lifespan_context, 'api_key') and ctx.request_context.lifespan_context.api_key:
+        headers['x-api-key'] = ctx.request_context.lifespan_context.api_key
+    elif node_env == 'development':
+        logger.info("Development mode: API key authentication skipped")
+    
+    return headers
 
 # === Tools ===
 
@@ -125,8 +151,9 @@ def get_ticket_list(
     params = {k: v for k, v in params.items() if v is not None}
     
     try:
-        # Make API request
-        response = requests.get(f"{api_base_url}/tickets", params=params)
+        # Make API request with authentication headers
+        headers = get_api_headers(ctx)
+        response = requests.get(f"{api_base_url}/tickets", params=params, headers=headers)
         response.raise_for_status()  # Raise exception for non-200 status codes
         
         # Parse response
@@ -183,15 +210,18 @@ def get_ticket_detail(
     api_base_url = ctx.request_context.lifespan_context.api_base_url
     
     try:
+        # Get headers for API requests
+        headers = get_api_headers(ctx)
+        
         # Get ticket details
-        detail_response = requests.get(f"{api_base_url}/tickets/{ticketId}")
+        detail_response = requests.get(f"{api_base_url}/tickets/{ticketId}", headers=headers)
         detail_response.raise_for_status()
         
         # Parse ticket data
         ticket = detail_response.json()
         
         # Get ticket history
-        history_response = requests.get(f"{api_base_url}/tickets/{ticketId}/history")
+        history_response = requests.get(f"{api_base_url}/tickets/{ticketId}/history", headers=headers)
         history_response.raise_for_status()
         
         # Parse history data
@@ -376,10 +406,12 @@ def create_ticket(
     
     try:
         # Make API request
+        headers = get_api_headers(ctx)
+        headers['Content-Type'] = 'application/json'
         response = requests.post(
             f"{api_base_url}/tickets",
             json=ticket_data,
-            headers={'Content-Type': 'application/json'}
+            headers=headers
         )
         response.raise_for_status()
         
@@ -511,10 +543,12 @@ def update_ticket(
     
     try:
         # Make API request
+        headers = get_api_headers(ctx)
+        headers['Content-Type'] = 'application/json'
         response = requests.put(
             f"{api_base_url}/tickets/{ticketId}",
             json=update_data,
-            headers={'Content-Type': 'application/json'}
+            headers=headers
         )
         response.raise_for_status()
         
@@ -588,10 +622,12 @@ def add_ticket_history(
     
     try:
         # Make API request
+        headers = get_api_headers(ctx)
+        headers['Content-Type'] = 'application/json'
         response = requests.post(
             f"{api_base_url}/tickets/{ticketId}/history",
             json=history_data,
-            headers={'Content-Type': 'application/json'}
+            headers=headers
         )
         response.raise_for_status()
         
@@ -655,7 +691,7 @@ def get_users(
     
     try:
         # Make API request
-        response = requests.get(f"{api_base_url}/tickets/master/users", params=params)
+        response = requests.get(f"{api_base_url}/tickets/master/users", params=params, headers=get_api_headers(ctx))
         response.raise_for_status()
         
         # Parse response
@@ -700,7 +736,7 @@ def get_accounts(ctx: Context = None) -> str:
     
     try:
         # Make API request
-        response = requests.get(f"{api_base_url}/tickets/master/accounts")
+        response = requests.get(f"{api_base_url}/tickets/master/accounts", headers=get_api_headers(ctx))
         response.raise_for_status()
         
         # Parse response
@@ -745,7 +781,7 @@ def get_categories(ctx: Context = None) -> str:
     
     try:
         # Make API request
-        response = requests.get(f"{api_base_url}/tickets/master/categories")
+        response = requests.get(f"{api_base_url}/tickets/master/categories", headers=get_api_headers(ctx))
         response.raise_for_status()
         
         # Parse response
@@ -802,7 +838,7 @@ def get_category_details(
     
     try:
         # Make API request
-        response = requests.get(f"{api_base_url}/tickets/master/category-details", params=params)
+        response = requests.get(f"{api_base_url}/tickets/master/category-details", params=params, headers=get_api_headers(ctx))
         response.raise_for_status()
         
         # Parse response
@@ -847,7 +883,7 @@ def get_statuses(ctx: Context = None) -> str:
     
     try:
         # Make API request
-        response = requests.get(f"{api_base_url}/tickets/master/statuses")
+        response = requests.get(f"{api_base_url}/tickets/master/statuses", headers=get_api_headers(ctx))
         response.raise_for_status()
         
         # Parse response
@@ -891,7 +927,7 @@ def get_request_channels(ctx: Context = None) -> str:
     
     try:
         # Make API request
-        response = requests.get(f"{api_base_url}/tickets/master/request-channels")
+        response = requests.get(f"{api_base_url}/tickets/master/request-channels", headers=get_api_headers(ctx))
         response.raise_for_status()
         
         # Parse response
