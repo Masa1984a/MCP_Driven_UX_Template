@@ -384,6 +384,7 @@ Pull requests are welcome. For major changes, please create an issue first to di
 
 ## 📅 Change History
 
+- **2025-06-03**: Added support for Azure cloud environment.
 - **2025-05-25**: Increased sample SQL data from 10 to 50 tickets for more realistic testing and demonstration.
 - **2025-05-23**: Migrated SQL queries in ticketController.ts to PgTyped for type-safe SQL queries. Improved code maintainability and type safety by separating SQL files.
 - **2025-05-18**: Initial release. Basic ticket management system with MCP integration, CRUD operations, and multi-language support.
