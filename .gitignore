@@ -63,3 +63,4 @@ deploy-*-temp.yaml
 
 claude_desktop_config_azure.json
 mcp_server/.env
+.claude/

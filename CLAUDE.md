@@ -1,4 +1,2 @@
-@ToDo3.md はToDoリストの台帳になっている。常にこのToDoリストを念頭にタスクを実行してください。作業の都度 @ToDo3.md のステータスをアップデートしてください。
-このToDoリストは作業をしながら、手順書を作成してください。手順書は、AzureWork.mdでお願いします。
 PC上ではWindows11のPowerShellを使います。BashではなくPowerShellで出力ください。
 Azureの作業は私がやります。Azure作業はコマンドを教えてください。

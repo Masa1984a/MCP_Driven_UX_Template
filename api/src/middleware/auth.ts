@@ -2,11 +2,9 @@ import { Request, Response, NextFunction } from 'express';
 import { logger } from '../utils/logger';
 
 // Extend Express Request type to include API key info
-declare global {
-  namespace Express {
-    interface Request {
-      apiKey?: string;
-    }
+declare module 'express-serve-static-core' {
+  interface Request {
+    apiKey?: string;
   }
 }
 
