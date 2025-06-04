@@ -32,7 +32,7 @@ if ($configContent -match 'location:\s*"?([^"\r\n]+)"?') {
 # Generate resource names based on prefix
 $ResourceGroup = "rg-$prefix"
 $ContainerName = "$prefix-containers"
-$KeyVaultName = "$prefix-keyvault"
+$KeyVaultName = "$prefix-kv"
 
 Write-Host "Using configuration:" -ForegroundColor Cyan
 Write-Host "  Prefix: $prefix" -ForegroundColor Cyan
@@ -61,14 +61,20 @@ $apiKey = az keyvault secret show --vault-name $KeyVaultName --name "mcp-api-key
 Write-Host "ACR Password: Retrieved" -ForegroundColor Green
 Write-Host "DB Password: Retrieved" -ForegroundColor Green
 
+# Get Managed Identity Client ID
+$identityClientId = az identity show --resource-group $ResourceGroup --name "$prefix-identity" --query clientId -o tsv
+Write-Host "Identity Client ID: Retrieved" -ForegroundColor Green
+
 # Create deployment YAML with actual values
 Write-Host "`nCreating deployment configuration..." -ForegroundColor Yellow
 $deployYaml = Get-Content "deploy-api-only.yaml" -Raw
+$deployYaml = $deployYaml -replace "\{PREFIX_ACR\}", $prefix_acr
 $deployYaml = $deployYaml -replace "\{PREFIX\}", $prefix
 $deployYaml = $deployYaml -replace "\{LOCATION\}", $location
 $deployYaml = $deployYaml -replace "ACR_PASSWORD_PLACEHOLDER", $acrPassword
 $deployYaml = $deployYaml -replace "DB_PASSWORD_PLACEHOLDER", $dbPassword
 $deployYaml = $deployYaml -replace "API_KEY_PLACEHOLDER", $apiKey
+$deployYaml = $deployYaml -replace "AZURE_CLIENT_ID_PLACEHOLDER", $identityClientId
 
 # Save to temporary file
 $tempFile = "deploy-api-only-temp.yaml"

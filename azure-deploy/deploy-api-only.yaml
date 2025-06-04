@@ -9,7 +9,7 @@ properties:
   containers:
   - name: api-server
     properties:
-      image: {PREFIX}acr.azurecr.io/api-server:auth-v2
+      image: {PREFIX_ACR}acr.azurecr.io/api-server:latest
       ports:
       - port: 8080
         protocol: TCP
@@ -37,11 +37,11 @@ properties:
       - name: API_KEY
         secureValue: API_KEY_PLACEHOLDER
       - name: AZURE_CLIENT_ID
-        value: 53a2f7bd-9acf-4792-85e4-fde7c3ff58eb
+        value: AZURE_CLIENT_ID_PLACEHOLDER
   
   imageRegistryCredentials:
-  - server: {PREFIX}acr.azurecr.io
-    username: {PREFIX}acr
+  - server: {PREFIX_ACR}acr.azurecr.io
+    username: {PREFIX_ACR}acr
     password: ACR_PASSWORD_PLACEHOLDER
   
   ipAddress:

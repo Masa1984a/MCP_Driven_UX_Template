@@ -401,9 +401,9 @@ Write-Host "API Server URL: http://$FQDN:8080"
 
 # または、コンテナ情報から取得
 $containerInfo = az container show --resource-group $RESOURCE_GROUP --name $CONTAINER_NAME | ConvertFrom-Json
-$FQDN = $containerInfo.properties.ipAddress.fqdn
-$IP = $containerInfo.properties.ipAddress.ip
-Write-Host "API Server URL: http://$FQDN:8080"
+$FQDN = $containerInfo.ipAddress.fqdn
+$IP = $containerInfo.ipAddress.ip
+Write-Host "API Server URL: http://${FQDN}:8080"
 Write-Host "API Server IP: http://${IP}:8080"
 ```
 
@@ -411,18 +411,18 @@ Write-Host "API Server IP: http://${IP}:8080"
 
 ```powershell
 # ヘルスチェック
-Invoke-WebRequest -Uri "http://$FQDN:8080/health" -Method GET
+Invoke-WebRequest -Uri "http://${FQDN}:8080/health" -Method GET
 
 # API認証テスト（APIキーなし - 401エラーを期待）
 try {
-    Invoke-WebRequest -Uri "http://$FQDN:8080/tickets" -Method GET
+    Invoke-WebRequest -Uri "http://${FQDN}:8080/tickets" -Method GET
 } catch {
     Write-Host "Expected 401 error: $_"
 }
 
 # API認証テスト（APIキーあり）
 $headers = @{ "x-api-key" = $API_KEY }
-Invoke-WebRequest -Uri "http://$FQDN:8080/tickets" -Method GET -Headers $headers
+Invoke-WebRequest -Uri "http://${FQDN}:8080/tickets" -Method GET -Headers $headers
 ```
 
 ### 7.3 Check Application Logs
