@@ -277,7 +277,137 @@ This application can be deployed to the following platforms (verification requir
   - Container Instances  
   - Azure Database for PostgreSQL
 
+For AWS deployment, see our [AWS Deployment Guide](aws-deploy/Guidebook_AWS.md)
+For Google Cloud Platform deployment, see our [Google Cloud Platform Deployment Guide](gcp-deploy/Guidebook_gcp.md)
 For Azure deployment, see our [Azure Deployment Guide](azure-deploy/Guidebook_Azure.md)
+
+## ☁️ AWS Cloud Environment
+
+### Architecture Overview
+
+The MCP Driven UX Template can be deployed to Amazon Web Services (AWS) for production use, providing a scalable cloud-native architecture:
+
+```
+┌─────────────────┐    MCP(STDIO)    ┌─────────────────┐    HTTP/API    ┌──────────────────┐
+│  Claude Desktop │◄────────────────►│   MCP Server    │◄──────────────►│   AWS App Runner │
+│   (Local PC)    │                  │  (Local Python) │                │    (API Server)  │
+└─────────────────┘                  └─────────────────┘                └─────────┬────────┘
+                                                                                   │
+                                                                                   ▼
+┌──────────────────────────────────────────────────────────────────────────────────┐
+│                           AWS Cloud Environment                                  │
+│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐                │
+│  │ Secrets Manager │  │  Amazon ECR     │  │   Amazon RDS    │                │
+│  │   (Secrets)     │  │ (Container Reg) │  │  (PostgreSQL)   │                │
+│  └─────────────────┘  └─────────────────┘  └─────────────────┘                │
+│                                                                                │
+│  ┌─────────────────┐                                                           │
+│  │   IAM Roles     │  ← Secure service-to-service authentication               │
+│  │   (Security)    │                                                           │
+│  └─────────────────┘                                                           │
+└──────────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Current AWS Configuration
+
+The template is designed for flexible deployment with the following components:
+
+#### Core Services
+- **Amazon App Runner**: Hosts the Node.js/TypeScript API server with automatic scaling
+- **Amazon RDS for PostgreSQL**: Managed database service for persistent data storage
+- **Amazon ECR**: Container registry for application images
+- **AWS Secrets Manager**: Secure storage for API keys and database credentials
+- **IAM Roles**: Service-to-service authentication without hardcoded secrets
+
+#### Security Features
+- All sensitive data stored in AWS Secrets Manager
+- IAM roles for secure service authentication
+- API key-based authentication for external access
+- Network security through AWS VPC and security groups
+- HTTPS/SSL support for all communications
+
+#### Scalability & Management
+- Environment variable-based configuration for multi-environment deployment
+- PowerShell automation scripts for streamlined deployment
+- Centralized logging and monitoring capabilities via CloudWatch
+- Resource naming conventions for consistent management
+
+### Deployment Guide
+
+For complete step-by-step AWS deployment instructions, see:
+**[AWS Deployment Guide](aws-deploy/Guidebook_AWS.md)**
+
+The guide covers:
+- Prerequisites and environment setup
+- Automated resource provisioning with AWS CLI
+- Container image building and deployment to ECR
+- MCP Server integration with AWS API
+- Security configuration and best practices
+- Troubleshooting and maintenance
+
+## ☁️ Google Cloud Platform Environment
+
+### Architecture Overview
+
+The MCP Driven UX Template can be deployed to Google Cloud Platform (GCP) for production use, providing a scalable cloud-native architecture:
+
+```
+┌─────────────────┐    MCP(STDIO)    ┌─────────────────┐    HTTP/API    ┌──────────────────┐
+│  Claude Desktop │◄────────────────►│   MCP Server    │◄──────────────►│  Google Cloud    │
+│   (Local PC)    │                  │  (Local Python) │                │      Run         │
+└─────────────────┘                  └─────────────────┘                └─────────┬────────┘
+                                                                                   │
+                                                                                   ▼
+┌──────────────────────────────────────────────────────────────────────────────────┐
+│                           GCP Cloud Environment                                  │
+│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐                │
+│  │ Secret Manager  │  │ Artifact Registry│  │   Cloud SQL     │                │
+│  │   (Secrets)     │  │ (Container Reg) │  │  (PostgreSQL)   │                │
+│  └─────────────────┘  └─────────────────┘  └─────────────────┘                │
+│                                                                                │
+│  ┌─────────────────┐                                                           │
+│  │Service Accounts │  ← Secure service-to-service authentication               │
+│  │   (Security)    │                                                           │
+│  └─────────────────┘                                                           │
+└──────────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Current GCP Configuration
+
+The template is designed for flexible deployment with the following components:
+
+#### Core Services
+- **Google Cloud Run**: Hosts the Node.js/TypeScript API server with automatic scaling
+- **Google Cloud SQL for PostgreSQL**: Managed database service for persistent data storage
+- **Google Artifact Registry**: Container registry for application images
+- **Google Secret Manager**: Secure storage for API keys and database credentials
+- **Service Accounts**: Service-to-service authentication without hardcoded secrets
+
+#### Security Features
+- All sensitive data stored in Google Secret Manager
+- Service accounts for secure service authentication
+- API key-based authentication for external access
+- Network security through GCP VPC and firewall rules
+- HTTPS/SSL support for all communications
+
+#### Scalability & Management
+- Environment variable-based configuration for multi-environment deployment
+- gcloud CLI automation for streamlined deployment
+- Centralized logging and monitoring capabilities via Cloud Logging
+- Resource naming conventions for consistent management
+
+### Deployment Guide
+
+For complete step-by-step GCP deployment instructions, see:
+**[Google Cloud Platform Deployment Guide](gcp-deploy/Guidebook_gcp.md)**
+
+The guide covers:
+- Prerequisites and environment setup
+- Automated resource provisioning with gcloud CLI
+- Container image building and deployment to Artifact Registry
+- MCP Server integration with GCP API
+- Security configuration and best practices
+- Troubleshooting and maintenance
 
 ## ☁️ Azure Cloud Environment
 
@@ -384,6 +514,7 @@ Pull requests are welcome. For major changes, please create an issue first to di
 
 ## 📅 Change History
 
+- **2025-06-04**: Added support for Google Cloud Platform and AWS cloud environments.
 - **2025-06-03**: Added support for Azure cloud environment.
 - **2025-05-25**: Increased sample SQL data from 10 to 50 tickets for more realistic testing and demonstration.
 - **2025-05-23**: Migrated SQL queries in ticketController.ts to PgTyped for type-safe SQL queries. Improved code maintainability and type safety by separating SQL files.

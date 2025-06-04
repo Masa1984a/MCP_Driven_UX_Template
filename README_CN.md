@@ -263,7 +263,137 @@ API 服务器提供以下端点：
   - Container Instances
   - Azure Database for PostgreSQL
 
+有关AWS部署，请参阅我们的 [AWS 部署指南](aws-deploy/Guidebook_AWS.md)
+有关Google Cloud Platform部署，请参阅我们的 [Google Cloud Platform 部署指南](gcp-deploy/Guidebook_gcp.md)
 有关Azure部署，请参阅我们的 [Azure 部署指南](azure-deploy/Guidebook_Azure.md)
+
+## ☁️ AWS 云环境
+
+### 架构概述
+
+MCP Driven UX 模板可以部署到 Amazon Web Services (AWS) 用于生产环境，提供可扩展的云原生架构：
+
+```
+┌─────────────────┐    MCP(STDIO)    ┌─────────────────┐    HTTP/API    ┌──────────────────┐
+│  Claude Desktop │◄────────────────►│   MCP Server    │◄──────────────►│   AWS App Runner │
+│    (本地PC)      │                  │  (本地Python)    │                │    (API Server)  │
+└─────────────────┘                  └─────────────────┘                └─────────┬────────┘
+                                                                                   │
+                                                                                   ▼
+┌──────────────────────────────────────────────────────────────────────────────────┐
+│                            AWS 云环境                                            │
+│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐                │
+│  │ Secrets Manager │  │  Amazon ECR     │  │   Amazon RDS    │                │
+│  │    (密钥)       │  │ (Container Reg) │  │  (PostgreSQL)   │                │
+│  └─────────────────┘  └─────────────────┘  └─────────────────┘                │
+│                                                                                │
+│  ┌─────────────────┐                                                           │
+│  │   IAM Roles     │  ← 安全的服务间身份验证                                     │
+│  │    (安全性)      │                                                           │
+│  └─────────────────┘                                                           │
+└──────────────────────────────────────────────────────────────────────────────────┘
+```
+
+### 当前 AWS 配置
+
+模板设计为使用以下组件进行灵活部署：
+
+#### 核心服务
+- **Amazon App Runner**: 托管 Node.js/TypeScript API 服务器，具有自动扩展功能
+- **Amazon RDS for PostgreSQL**: 用于持久数据存储的托管数据库服务
+- **Amazon ECR**: 应用程序镜像的容器注册表
+- **AWS Secrets Manager**: API 密钥和数据库凭证的安全存储
+- **IAM Roles**: 无硬编码密钥的服务间身份验证
+
+#### 安全功能
+- 所有敏感数据存储在 AWS Secrets Manager 中
+- 使用 IAM 角色进行安全服务身份验证
+- 基于 API 密钥的外部访问身份验证
+- 通过 AWS VPC 和安全组实现网络安全
+- 所有通信支持 HTTPS/SSL
+
+#### 可扩展性和管理
+- 基于环境变量的多环境部署配置
+- 用于简化部署的 PowerShell 自动化脚本
+- 通过 CloudWatch 进行集中式日志和监控
+- 一致管理的资源命名约定
+
+### 部署指南
+
+有关 AWS 环境的完整分步部署说明，请参阅：
+**[AWS 部署指南](aws-deploy/Guidebook_AWS.md)**
+
+该指南涵盖：
+- 先决条件和环境设置
+- 使用 AWS CLI 自动化资源配置
+- 容器镜像构建和部署到 ECR
+- MCP Server 与 AWS API 的集成
+- 安全配置和最佳实践
+- 故障排除和维护
+
+## ☁️ Google Cloud Platform 云环境
+
+### 架构概述
+
+MCP Driven UX 模板可以部署到 Google Cloud Platform (GCP) 用于生产环境，提供可扩展的云原生架构：
+
+```
+┌─────────────────┐    MCP(STDIO)    ┌─────────────────┐    HTTP/API    ┌──────────────────┐
+│  Claude Desktop │◄────────────────►│   MCP Server    │◄──────────────►│  Google Cloud    │
+│    (本地PC)      │                  │  (本地Python)    │                │      Run         │
+└─────────────────┘                  └─────────────────┘                └─────────┬────────┘
+                                                                                   │
+                                                                                   ▼
+┌──────────────────────────────────────────────────────────────────────────────────┐
+│                            GCP 云环境                                            │
+│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐                │
+│  │ Secret Manager  │  │ Artifact Registry│  │   Cloud SQL     │                │
+│  │    (密钥)       │  │ (Container Reg) │  │  (PostgreSQL)   │                │
+│  └─────────────────┘  └─────────────────┘  └─────────────────┘                │
+│                                                                                │
+│  ┌─────────────────┐                                                           │
+│  │Service Accounts │  ← 安全的服务间身份验证                                     │
+│  │    (安全性)      │                                                           │
+│  └─────────────────┘                                                           │
+└──────────────────────────────────────────────────────────────────────────────────┘
+```
+
+### 当前 GCP 配置
+
+模板设计为使用以下组件进行灵活部署：
+
+#### 核心服务
+- **Google Cloud Run**: 托管 Node.js/TypeScript API 服务器，具有自动扩展功能
+- **Google Cloud SQL for PostgreSQL**: 用于持久数据存储的托管数据库服务
+- **Google Artifact Registry**: 应用程序镜像的容器注册表
+- **Google Secret Manager**: API 密钥和数据库凭证的安全存储
+- **Service Accounts**: 无硬编码密钥的服务间身份验证
+
+#### 安全功能
+- 所有敏感数据存储在 Google Secret Manager 中
+- 使用 Service Accounts 进行安全服务身份验证
+- 基于 API 密钥的外部访问身份验证
+- 通过 GCP VPC 和防火墙规则实现网络安全
+- 所有通信支持 HTTPS/SSL
+
+#### 可扩展性和管理
+- 基于环境变量的多环境部署配置
+- 用于简化部署的 gcloud CLI 自动化
+- 通过 Cloud Logging 进行集中式日志和监控
+- 一致管理的资源命名约定
+
+### 部署指南
+
+有关 GCP 环境的完整分步部署说明，请参阅：
+**[Google Cloud Platform 部署指南](gcp-deploy/Guidebook_gcp.md)**
+
+该指南涵盖：
+- 先决条件和环境设置
+- 使用 gcloud CLI 自动化资源配置
+- 容器镜像构建和部署到 Artifact Registry
+- MCP Server 与 GCP API 的集成
+- 安全配置和最佳实践
+- 故障排除和维护
 
 ## ☁️ Azure 云环境
 
@@ -396,6 +526,7 @@ MCP Driven UX 模板可以部署到 Microsoft Azure 用于生产环境，提供�
 
 ## 📝 变更历史
 
+- **2025-06-04**：新增对 Google Cloud Platform 和 AWS 云环境的支持
 - **2025-06-03**：新增对 Azure 云环境的支持
 - **2025-05-25**：将示例 SQL 数据从 10 条增加到 50 条工单，以便进行更真实的测试和演示
 - **2025-05-23**：将 SQL 查询迁移到 PgTyped 以实现类型安全的 SQL 查询
