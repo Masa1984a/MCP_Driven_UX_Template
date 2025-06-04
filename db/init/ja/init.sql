@@ -884,14 +884,6 @@ INSERT INTO ticket_history (ticket_id, timestamp, user_id, user_name, comment) V
   ('TCK-0049', NOW() - INTERVAL '29 days', 'user1', '山田 太郎', '新規チケット作成'),
   ('TCK-0050', NOW() - INTERVAL '30 days', 'user2', '鈴木 花子', '新規チケット作成');
 
--- 追加の変更履歴フィールド
-INSERT INTO history_changed_fields (history_id, field_name, old_value, new_value) VALUES
-  (31, 'status', '受付済', '完了'),
-  (52, 'status', '受付済', '完了'),
-  (61, 'status', '受付済', '対応中'),
-  (67, 'status', '受付済', '完了'),
-  (70, 'status', '受付済', '完了'),
-  (71, 'status', '受付済', '完了');
 
 -- 次回のチケットID用にシーケンスの値を更新
 SELECT setval('ticket_id_seq', 50, true);

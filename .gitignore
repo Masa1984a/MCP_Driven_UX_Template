@@ -64,3 +64,7 @@ deploy-*-temp.yaml
 claude_desktop_config_azure.json
 mcp_server/.env
 .claude/
+claude_desktop_config_gcp.json
+credentials.txt
+current-service.yaml
+claude_desktop_config_aws.json

@@ -1,2 +1,2 @@
 PC上ではWindows11のPowerShellを使います。BashではなくPowerShellで出力ください。
-Azureの作業は私がやります。Azure作業はコマンドを教えてください。
+AWS/GCP/Azureの作業は私がやります。AWS/GCP/Azure作業はコマンドを教えてください。

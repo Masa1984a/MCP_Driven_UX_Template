@@ -884,14 +884,6 @@ INSERT INTO ticket_history (ticket_id, timestamp, user_id, user_name, comment) V
   ('TCK-0049', NOW() - INTERVAL '29 days', 'user1', 'John Smith', 'New ticket created'),
   ('TCK-0050', NOW() - INTERVAL '30 days', 'user2', 'Emily Johnson', 'New ticket created');
 
--- Additional history changed fields
-INSERT INTO history_changed_fields (history_id, field_name, old_value, new_value) VALUES
-  (31, 'status', 'Received', 'Completed'),
-  (52, 'status', 'Received', 'Completed'),
-  (61, 'status', 'Received', 'In Progress'),
-  (67, 'status', 'Received', 'Completed'),
-  (70, 'status', 'Received', 'Completed'),
-  (71, 'status', 'Received', 'Completed');
 
 -- Update sequence value for next ticket ID
 SELECT setval('ticket_id_seq', 50, true);
