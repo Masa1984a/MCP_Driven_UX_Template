@@ -114,10 +114,10 @@ class StreamableHTTPTransport:
             )
         
         # Extract session ID from header
-        session_id = request.headers.get("Mcp-Session-Id")
+        session_id = request.headers.get("mcp-session-id") or request.headers.get("Mcp-Session-Id")
         
         if not session_id:
-            logger.warning("GET request missing Mcp-Session-Id header")
+            logger.warning("GET request missing mcp-session-id header")
             return JSONResponse(
                 status_code=400,
                 content={
@@ -215,17 +215,17 @@ class StreamableHTTPTransport:
         
         # Handle notifications and responses (return 202 Accepted)
         if message_type in ["notification", "response"]:
-            session_id = request.headers.get("Mcp-Session-Id")
+            session_id = request.headers.get("mcp-session-id") or request.headers.get("Mcp-Session-Id")
             
             if not session_id:
-                logger.warning("POST notification/response missing Mcp-Session-Id header")
+                logger.warning("POST notification/response missing mcp-session-id header")
                 return JSONResponse(
                     status_code=400,
                     content={
                         "jsonrpc": "2.0",
                         "error": {
                             "code": -32000,
-                            "message": "Missing Mcp-Session-Id header for notification/response"
+                            "message": "Missing mcp-session-id header for notification/response"
                         }
                     }
                 )
@@ -254,15 +254,15 @@ class StreamableHTTPTransport:
             return JSONResponse(
                 status_code=202,
                 content=None,
-                headers={"Mcp-Session-Id": session_id}
+                headers={"mcp-session-id": session_id}
             )
         
         # Handle requests (require session ID)
         if message_type == "request":
-            session_id = request.headers.get("Mcp-Session-Id")
+            session_id = request.headers.get("mcp-session-id") or request.headers.get("Mcp-Session-Id")
             
             if not session_id:
-                logger.warning("POST request missing Mcp-Session-Id header")
+                logger.warning("POST request missing mcp-session-id header")
                 return JSONResponse(
                     status_code=400,
                     content={
@@ -317,7 +317,7 @@ class StreamableHTTPTransport:
     
     async def _handle_initialize_request(self, request: Request, body: Dict[str, Any]) -> JSONResponse:
         """
-        Handle initialize request by creating new session.
+        Handle initialize request - use existing session or create new one.
         
         Args:
             request: FastAPI Request object
@@ -326,23 +326,29 @@ class StreamableHTTPTransport:
         Returns:
             JSONResponse with initialize result and session ID
         """
+        # Check for existing session ID (MCP Inspector compatibility)
+        existing_session_id = request.headers.get("mcp-session-id") or request.headers.get("Mcp-Session-Id")
+        
         # Extract authentication info if available
         auth_info = {}
         if "Authorization" in request.headers:
             auth_info["authorization"] = request.headers["Authorization"]
         
-        # Create new session
-        session_id = self.session_manager.create_session(auth_info)
-        
-        logger.info(f"Created new session: {session_id}")
+        # Use existing session if valid, otherwise create new one
+        if existing_session_id and self.session_manager.validate_session(existing_session_id):
+            session_id = existing_session_id
+            logger.info(f"Using existing session: {session_id}")
+        else:
+            session_id = self.session_manager.create_session(auth_info)
+            logger.info(f"Created new session: {session_id}")
         
         # Process initialize message
         result = await self._process_message(body, session_id)
         
-        # Return result with session ID in header
+        # Return result with session ID in header (use lowercase for compatibility)
         return JSONResponse(
             content=result,
-            headers={"Mcp-Session-Id": session_id}
+            headers={"mcp-session-id": session_id}
         )
     
     async def _establish_sse_stream(self, request: Request, session_id: str) -> StreamingResponse:
