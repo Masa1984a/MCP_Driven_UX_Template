@@ -42,31 +42,6 @@ logging.basicConfig(
 logger = logging.getLogger('cloud_mcp_server')
 
 
-def get_real_url(request: Request) -> str:
-    """
-    Get the real URL considering Cloud Run reverse proxy headers.
-    
-    Cloud Run terminates HTTPS and forwards HTTP to the container,
-    so we need to check X-Forwarded-Proto to determine the real scheme.
-    """
-    # Check proxy headers for real scheme
-    forwarded_proto = request.headers.get("X-Forwarded-Proto", "http")
-    forwarded_host = request.headers.get("X-Forwarded-Host") or request.headers.get("Host")
-    
-    # Use forwarded values if available, otherwise fall back to request values
-    scheme = forwarded_proto if forwarded_proto in ["http", "https"] else "https"
-    host = forwarded_host or request.url.hostname
-    path = str(request.url.path)
-    query = str(request.url.query) if request.url.query else ""
-    
-    # Construct the real URL
-    url = f"{scheme}://{host}{path}"
-    if query:
-        url += f"?{query}"
-    
-    return url
-
-
 class CloudMCPServer:
     """
     Cloud-based MCP server with SSE transport and authentication.
@@ -644,13 +619,10 @@ if FASTAPI_AVAILABLE:
         
         if ("127.0.0.1:6274" in origin or "127.0.0.1:6277" in origin or 
             "mcp-inspector" in user_agent.lower()):
-            real_url = get_real_url(request)
-            logger.info(f"MCP Inspector proxy request detected: {request.method} {real_url}")
+            logger.info(f"MCP Inspector proxy request detected: {request.method} {request.url}")
             return await handle_mcp_inspector_request(request)
         
-        # Get correct HTTPS URL for logging (Cloud Run proxy-aware)
-        real_url = get_real_url(request)
-        logger.info(f"MCP Streamable HTTP request: {request.method} {real_url}")
+        logger.info(f"MCP Streamable HTTP request: {request.method} {request.url}")
         return await server_instance.streamable_transport.handle_request(request)
     
     
