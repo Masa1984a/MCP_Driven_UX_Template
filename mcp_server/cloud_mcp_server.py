@@ -553,13 +553,14 @@ if FASTAPI_AVAILABLE:
         lifespan=lifespan
     )
     
-    # Add CORS middleware
+    # Add CORS middleware with proper expose headers
     app.add_middleware(
         CORSMiddleware,
         allow_origins=["*"],  # Configure appropriately for production
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
+        expose_headers=["mcp-session-id", "Mcp-Session-Id"],  # Critical for MCP Inspector
     )
     
     # Security scheme
@@ -624,8 +625,8 @@ if FASTAPI_AVAILABLE:
                 headers={
                     "Access-Control-Allow-Origin": "*",
                     "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-                    "Access-Control-Allow-Headers": "Authorization, Content-Type, Mcp-Session-Id",
-                    "Access-Control-Expose-Headers": "mcp-session-id"
+                    "Access-Control-Allow-Headers": "Authorization, Content-Type, mcp-session-id, Mcp-Session-Id",
+                    "Access-Control-Expose-Headers": "mcp-session-id, Mcp-Session-Id"
                 }
             )
         
@@ -640,13 +641,24 @@ if FASTAPI_AVAILABLE:
         # Check if this is a proxy request from MCP Inspector
         origin = request.headers.get("origin", "")
         user_agent = request.headers.get("user-agent", "")
-        logger.debug(f"MCP endpoint request - Method: {request.method}, Origin: '{origin}', User-Agent: '{user_agent}', Headers: {dict(request.headers)}")
         
+        # Enhanced debugging for MCP Inspector issues
+        logger.info(f"MCP endpoint request - Method: {request.method}, Origin: '{origin}', User-Agent: '{user_agent}'")
+        logger.info(f"Query params: {dict(request.query_params)}")
+        logger.info(f"Headers - Content-Type: {request.headers.get('content-type', 'None')}, Accept: {request.headers.get('accept', 'None')}")
+        logger.info(f"Session header: mcp-session-id='{request.headers.get('mcp-session-id', 'None')}', Mcp-Session-Id='{request.headers.get('Mcp-Session-Id', 'None')}'")
+        
+        # Log additional headers for debugging
+        if request.method == "POST":
+            authorization = request.headers.get("authorization", "None")
+            logger.info(f"Authorization header present: {'Yes' if authorization != 'None' else 'No'}")
+        
+        # Log MCP Inspector detection but use standard Streamable HTTP handling
         if ("127.0.0.1:6274" in origin or "127.0.0.1:6277" in origin or 
-            "mcp-inspector" in user_agent.lower()):
+            "mcp-inspector" in user_agent.lower() or user_agent.strip().lower() == "node"):
             real_url = get_real_url(request)
             logger.info(f"MCP Inspector proxy request detected: {request.method} {real_url}")
-            return await handle_mcp_inspector_request(request)
+            # Continue with standard Streamable HTTP processing instead of special handling
         
         # Get correct HTTPS URL for logging (Cloud Run proxy-aware)
         real_url = get_real_url(request)
@@ -683,64 +695,7 @@ if FASTAPI_AVAILABLE:
         return is_allowed
     
     
-    async def handle_mcp_inspector_request(request: Request):
-        """Handle MCP Inspector proxy requests with special compatibility."""
-        # Validate Origin header for security
-        if not await validate_origin_header(request):
-            logger.warning(f"Rejected request from invalid origin: {request.headers.get('origin')}")
-            raise HTTPException(status_code=403, detail="Invalid origin")
-        
-        try:
-            if request.method == "POST":
-                # Parse the request body
-                body = await request.json()
-                logger.info(f"MCP Inspector request body: {body}")
-                
-                # Extract URL parameters (MCP Inspector passes these)
-                url_param = request.query_params.get("url")
-                transport_type = request.query_params.get("transportType")
-                
-                logger.info(f"MCP Inspector params - URL: {url_param}, Transport: {transport_type}")
-                
-                # Create a session for the inspector
-                session_id = str(uuid.uuid4())
-                
-                # Process the message
-                result = await process_mcp_message(body)
-                
-                # Create SSE response with the result
-                async def inspector_sse_generator():
-                    # Send the response as SSE message
-                    yield f"event: message\n"
-                    yield f"data: {json.dumps(result)}\n\n"
-                    
-                    # Keep connection alive
-                    while True:
-                        await asyncio.sleep(30)
-                        yield f"event: ping\n"
-                        yield f"data: {json.dumps({'timestamp': datetime.now().isoformat()})}\n\n"
-                
-                return StreamingResponse(
-                    inspector_sse_generator(),
-                    media_type="text/event-stream",
-                    headers={
-                        "Cache-Control": "no-cache",
-                        "Connection": "keep-alive",
-                        "Access-Control-Allow-Origin": "*",
-                        "Access-Control-Expose-Headers": "mcp-session-id",
-                        "mcp-session-id": session_id
-                    }
-                )
-            
-            else:  # GET request
-                raise HTTPException(status_code=405, detail="Method not allowed for inspector")
-                
-        except Exception as e:
-            logger.error(f"MCP Inspector request error: {e}")
-            return JSONResponse(
-                status_code=500,
-                content={"error": str(e)}
-            )
+    # Removed handle_mcp_inspector_request - using standard Streamable HTTP instead
     
     
     @app.get("/.well-known/ai-plugin.json")

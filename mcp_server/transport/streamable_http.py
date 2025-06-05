@@ -156,6 +156,11 @@ class StreamableHTTPTransport:
         Returns:
             JSONResponse or StreamingResponse with processing result
         """
+        # Debug logging for MCP Inspector compatibility
+        user_agent = request.headers.get("user-agent", "")
+        existing_session = request.headers.get("mcp-session-id") or request.headers.get("Mcp-Session-Id")
+        logger.debug(f"POST /mcp - User-Agent: '{user_agent}', Session-ID: '{existing_session}', Accept: '{request.headers.get('accept', '')}'")
+        
         # Validate Accept header (MUST include both application/json and text/event-stream)
         accept_header = request.headers.get("accept", "")
         if not ("application/json" in accept_header and "text/event-stream" in accept_header):
@@ -250,11 +255,15 @@ class StreamableHTTPTransport:
             # Update session activity
             self.session_manager.update_session_activity(session_id)
             
-            # Return 202 Accepted (as per spec)
+            # Return 202 Accepted (as per spec) with consistent headers
             return JSONResponse(
                 status_code=202,
                 content=None,
-                headers={"mcp-session-id": session_id}
+                headers={
+                    "mcp-session-id": session_id,
+                    "Mcp-Session-Id": session_id,
+                    "Access-Control-Expose-Headers": "mcp-session-id, Mcp-Session-Id"
+                }
             )
         
         # Handle requests (require session ID)
@@ -262,18 +271,36 @@ class StreamableHTTPTransport:
             session_id = request.headers.get("mcp-session-id") or request.headers.get("Mcp-Session-Id")
             
             if not session_id:
-                logger.warning("POST request missing mcp-session-id header")
-                return JSONResponse(
-                    status_code=400,
-                    content={
-                        "jsonrpc": "2.0",
-                        "id": body.get("id"),
-                        "error": {
-                            "code": -32000,
-                            "message": "Missing Mcp-Session-Id header"
+                user_agent = request.headers.get("user-agent", "")
+                logger.warning(f"POST request missing mcp-session-id header - User-Agent: {user_agent}")
+                
+                # Special handling for MCP Inspector with undefined sessionId
+                origin = request.headers.get("origin", "")
+                is_mcp_inspector = ("inspector" in user_agent.lower() or "mcp" in user_agent.lower() or 
+                                   "node" == user_agent.strip() or "127.0.0.1:6274" in origin or "127.0.0.1:6277" in origin)
+                
+                if is_mcp_inspector:
+                    logger.info(f"MCP Inspector detected - User-Agent: '{user_agent}', Origin: '{origin}'")
+                    logger.info("Creating emergency session for MCP Inspector with undefined sessionId")
+                    # Create a temporary session for MCP Inspector
+                    auth_info = {}
+                    if "Authorization" in request.headers:
+                        auth_info["authorization"] = request.headers["Authorization"]
+                    session_id = self.session_manager.create_session(auth_info)
+                    logger.info(f"Emergency session created for MCP Inspector: {session_id}")
+                    logger.info(f"MCP Inspector query params: {dict(request.query_params)}")
+                else:
+                    return JSONResponse(
+                        status_code=400,
+                        content={
+                            "jsonrpc": "2.0",
+                            "id": body.get("id"),
+                            "error": {
+                                "code": -32000,
+                                "message": "Missing mcp-session-id header"
+                            }
                         }
-                    }
-                )
+                    )
             
             # Validate session
             if not self.session_manager.validate_session(session_id):
@@ -296,10 +323,18 @@ class StreamableHTTPTransport:
             # Update session activity
             self.session_manager.update_session_activity(session_id)
             
-            # Return JSON response (could be extended to support SSE streaming)
+            # Log response details
+            logger.info(f"Returning JSON response for session {session_id}: {result}")
+            logger.info(f"Response headers: mcp-session-id={session_id}")
+            
+            # Return JSON response with consistent headers
             return JSONResponse(
                 content=result,
-                headers={"Mcp-Session-Id": session_id}
+                headers={
+                    "mcp-session-id": session_id,
+                    "Mcp-Session-Id": session_id,
+                    "Access-Control-Expose-Headers": "mcp-session-id, Mcp-Session-Id"
+                }
             )
         
         # Unknown message type
@@ -334,21 +369,36 @@ class StreamableHTTPTransport:
         if "Authorization" in request.headers:
             auth_info["authorization"] = request.headers["Authorization"]
         
+        # Check if this is MCP Inspector (for compatibility mode)
+        user_agent = request.headers.get("user-agent", "").lower()
+        # MCP Inspector uses Node.js proxy with User-Agent: "node"
+        is_mcp_inspector = ("inspector" in user_agent or "mcp" in user_agent or 
+                           "node" == user_agent.strip())
+        
         # Use existing session if valid, otherwise create new one
         if existing_session_id and self.session_manager.validate_session(existing_session_id):
             session_id = existing_session_id
-            logger.info(f"Using existing session: {session_id}")
+            logger.info(f"Using existing session: {session_id} (from header)")
         else:
             session_id = self.session_manager.create_session(auth_info)
-            logger.info(f"Created new session: {session_id}")
+            logger.info(f"Created new session: {session_id} (MCP Inspector: {is_mcp_inspector})")
         
         # Process initialize message
         result = await self._process_message(body, session_id)
         
+        # Enhanced headers for MCP Inspector compatibility
+        response_headers = {
+            "mcp-session-id": session_id,
+            "Mcp-Session-Id": session_id,  # Alternative casing
+            "Access-Control-Expose-Headers": "mcp-session-id, Mcp-Session-Id"
+        }
+        
+        logger.info(f"Initialize response - Session: {session_id}, Headers: {response_headers}")
+        
         # Return result with session ID in header (use lowercase for compatibility)
         return JSONResponse(
             content=result,
-            headers={"mcp-session-id": session_id}
+            headers=response_headers
         )
     
     async def _establish_sse_stream(self, request: Request, session_id: str) -> StreamingResponse:
