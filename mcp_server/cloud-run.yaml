@@ -36,11 +36,11 @@ spec:
         - name: MCP_PORT
           value: "8080"
         - name: MCP_LOG_LEVEL
-          value: "DEBUG"
+          value: "INFO"
         - name: MCP_AUTH_PROVIDER
           value: "api_key"
         - name: MCP_TRANSPORT_TYPE
-          value: "streamable_http"
+          value: "sse"
         - name: MCP_CLOUD_RUN_TIMEOUT
           value: "840"  # 14 minutes in seconds
         - name: MCP_API_KEY

@@ -47,7 +47,7 @@ ENV MCP_HOST=0.0.0.0
 ENV MCP_PORT=8080
 ENV MCP_LOG_LEVEL=INFO
 ENV MCP_AUTH_PROVIDER=api_key
-ENV MCP_TRANSPORT_TYPE=streamable_http
+ENV MCP_TRANSPORT_TYPE=sse
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \

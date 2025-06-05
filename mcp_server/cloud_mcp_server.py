@@ -65,7 +65,7 @@ class CloudMCPServer:
         self.streamable_transport: Optional[StreamableHTTPTransport] = None
         self.app: Optional[FastAPI] = None
         
-        logger.info(f"Initializing Cloud MCP Server with auth: {settings.auth_provider}, transport: {settings.transport_type}")
+        logger.info(f"Initializing Cloud MCP Server with auth: {settings.auth_provider}")
     
     async def initialize(self):
         """Initialize all server components."""
@@ -615,10 +615,8 @@ if FASTAPI_AVAILABLE:
         # Check if this is a proxy request from MCP Inspector
         origin = request.headers.get("origin", "")
         user_agent = request.headers.get("user-agent", "")
-        logger.debug(f"MCP endpoint request - Method: {request.method}, Origin: '{origin}', User-Agent: '{user_agent}', Headers: {dict(request.headers)}")
         
-        if ("127.0.0.1:6274" in origin or "127.0.0.1:6277" in origin or 
-            "mcp-inspector" in user_agent.lower()):
+        if "127.0.0.1:6274" in origin or "mcp-inspector" in user_agent.lower():
             logger.info(f"MCP Inspector proxy request detected: {request.method} {request.url}")
             return await handle_mcp_inspector_request(request)
         
@@ -629,7 +627,6 @@ if FASTAPI_AVAILABLE:
     async def validate_origin_header(request: Request) -> bool:
         """Validate Origin header to prevent DNS rebinding attacks."""
         origin = request.headers.get("origin", "")
-        logger.debug(f"Origin header validation - Origin: '{origin}', User-Agent: '{request.headers.get('user-agent', '')}')")
         
         # Allow requests without Origin (direct API calls)
         if not origin:
@@ -638,21 +635,15 @@ if FASTAPI_AVAILABLE:
         # Allow localhost origins for development
         allowed_origins = [
             "http://127.0.0.1:6274",  # MCP Inspector
-            "http://127.0.0.1:6277",  # MCP Inspector alternative port
             "http://localhost:6274",
-            "http://localhost:6277",
             "https://127.0.0.1:6274",
-            "https://127.0.0.1:6277",
-            "https://localhost:6274",
-            "https://localhost:6277"
+            "https://localhost:6274"
         ]
         
         # Allow the actual deployment domain
         allowed_origins.append("https://mcp-server-883360737972.asia-northeast1.run.app")
         
-        is_allowed = origin in allowed_origins
-        logger.debug(f"Origin validation result - Origin: '{origin}', Allowed: {is_allowed}, Allowed origins: {allowed_origins}")
-        return is_allowed
+        return origin in allowed_origins
     
     
     async def handle_mcp_inspector_request(request: Request):
@@ -715,257 +706,6 @@ if FASTAPI_AVAILABLE:
             )
     
     
-    @app.get("/.well-known/ai-plugin.json")
-    async def ai_plugin_manifest():
-        """ChatGPT Actions API manifest."""
-        base_url = "https://mcp-server-883360737972.asia-northeast1.run.app"
-        return {
-            "schema_version": "v1",
-            "name_for_human": "MCP Ticket Server",
-            "name_for_model": "mcp_ticket_server", 
-            "description_for_human": "Access ticket management system data",
-            "description_for_model": "Search and fetch ticket information from the ticket management system",
-            "auth": {
-                "type": "none"
-            },
-            "api": {
-                "type": "openapi",
-                "url": f"{base_url}/openapi.json"
-            },
-            "logo_url": None,
-            "contact_email": "support@example.com",
-            "legal_info_url": None
-        }
-    
-    @app.get("/openapi.json")
-    async def openapi_spec():
-        """OpenAPI specification for ChatGPT Actions."""
-        base_url = "https://mcp-server-883360737972.asia-northeast1.run.app"
-        return {
-            "openapi": "3.0.0",
-            "info": {
-                "title": "MCP Ticket Server API",
-                "version": "1.0.0",
-                "description": "API for searching and fetching ticket information"
-            },
-            "servers": [{"url": base_url}],
-            "paths": {
-                "/search": {
-                    "post": {
-                        "operationId": "search",
-                        "summary": "Search for tickets",
-                        "description": "Search for tickets using a query string",
-                        "requestBody": {
-                            "required": True,
-                            "content": {
-                                "application/json": {
-                                    "schema": {
-                                        "type": "object",
-                                        "properties": {
-                                            "query": {
-                                                "type": "string",
-                                                "description": "Search query for tickets"
-                                            }
-                                        },
-                                        "required": ["query"]
-                                    }
-                                }
-                            }
-                        },
-                        "responses": {
-                            "200": {
-                                "description": "Search results",
-                                "content": {
-                                    "application/json": {
-                                        "schema": {
-                                            "type": "object",
-                                            "properties": {
-                                                "results": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "type": "object",
-                                                        "properties": {
-                                                            "id": {"type": "string"},
-                                                            "title": {"type": "string"},
-                                                            "text": {"type": "string"},
-                                                            "url": {"type": "string", "nullable": True}
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                },
-                "/fetch": {
-                    "post": {
-                        "operationId": "fetch",
-                        "summary": "Fetch ticket details",
-                        "description": "Fetch detailed information for a specific ticket",
-                        "requestBody": {
-                            "required": True,
-                            "content": {
-                                "application/json": {
-                                    "schema": {
-                                        "type": "object",
-                                        "properties": {
-                                            "id": {
-                                                "type": "string",
-                                                "description": "Ticket ID to fetch"
-                                            }
-                                        },
-                                        "required": ["id"]
-                                    }
-                                }
-                            }
-                        },
-                        "responses": {
-                            "200": {
-                                "description": "Ticket details",
-                                "content": {
-                                    "application/json": {
-                                        "schema": {
-                                            "type": "object",
-                                            "properties": {
-                                                "id": {"type": "string"},
-                                                "title": {"type": "string"},
-                                                "text": {"type": "string"},
-                                                "url": {"type": "string", "nullable": True},
-                                                "metadata": {"type": "object", "nullable": True}
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    
-    @app.post("/search")
-    async def chatgpt_search_action(request: Request):
-        """ChatGPT Actions API compatible search endpoint."""
-        if not server_instance or not server_instance.ticket_tools:
-            raise HTTPException(status_code=503, detail="Server not initialized")
-        
-        try:
-            body = await request.json()
-            query = body.get("query", "")
-            
-            # Use existing search implementation
-            raw_result = await server_instance.ticket_tools.get_ticket_list(
-                search_term=query,
-                limit=20
-            )
-            
-            # Parse the JSON result
-            if isinstance(raw_result, str):
-                if raw_result.strip():
-                    try:
-                        ticket_data = json.loads(raw_result)
-                    except json.JSONDecodeError:
-                        return {"results": []}
-                else:
-                    return {"results": []}
-            else:
-                ticket_data = raw_result
-            
-            # Convert to search results format
-            results = []
-            if isinstance(ticket_data, dict) and "tickets" in ticket_data:
-                for ticket in ticket_data["tickets"]:
-                    text_parts = []
-                    if ticket.get("description"):
-                        text_parts.append(ticket["description"])
-                    if ticket.get("status_name"):
-                        text_parts.append(f"Status: {ticket['status_name']}")
-                    if ticket.get("category_name"):
-                        text_parts.append(f"Category: {ticket['category_name']}")
-                    
-                    summary_text = " | ".join(text_parts) if text_parts else ticket.get("title", "")
-                    
-                    results.append({
-                        "id": str(ticket.get("id", "")),
-                        "title": ticket.get("title", ""),
-                        "text": summary_text,
-                        "url": None
-                    })
-            
-            return {"results": results}
-            
-        except Exception as e:
-            logger.error(f"Search action error: {e}")
-            return {"results": []}
-    
-    @app.post("/fetch")
-    async def chatgpt_fetch_action(request: Request):
-        """ChatGPT Actions API compatible fetch endpoint."""
-        if not server_instance or not server_instance.ticket_tools:
-            raise HTTPException(status_code=503, detail="Server not initialized")
-        
-        try:
-            body = await request.json()
-            ticket_id = body.get("id", "")
-            
-            # Use existing fetch implementation
-            raw_result = await server_instance.ticket_tools.get_ticket_detail(ticketId=ticket_id)
-            
-            # Parse the JSON result
-            if isinstance(raw_result, str):
-                if raw_result.strip():
-                    try:
-                        ticket_data = json.loads(raw_result)
-                    except json.JSONDecodeError:
-                        raise HTTPException(status_code=404, detail="Ticket not found")
-                else:
-                    raise HTTPException(status_code=404, detail="Ticket not found")
-            else:
-                ticket_data = raw_result
-            
-            # Convert to fetch result format
-            if isinstance(ticket_data, dict):
-                text_parts = []
-                if ticket_data.get("description"):
-                    text_parts.append(f"Description: {ticket_data['description']}")
-                
-                # Add history if available
-                if ticket_data.get("history"):
-                    text_parts.append("\nHistory:")
-                    for history_item in ticket_data["history"]:
-                        if isinstance(history_item, dict):
-                            created_at = history_item.get("created_at", "")
-                            content = history_item.get("content", "")
-                            user_name = history_item.get("user_name", "")
-                            text_parts.append(f"- {created_at}: {content} (by {user_name})")
-                
-                complete_text = "\n".join(text_parts) if text_parts else "No description available"
-                
-                # Prepare metadata
-                metadata = {}
-                for key in ["status_name", "category_name", "account_name", "person_in_charge_name", "priority", "created_at", "updated_at"]:
-                    if ticket_data.get(key):
-                        metadata[key] = str(ticket_data[key])
-                
-                return {
-                    "id": str(ticket_data.get("id", ticket_id)),
-                    "title": ticket_data.get("title", "No title"),
-                    "text": complete_text,
-                    "url": None,
-                    "metadata": metadata if metadata else None
-                }
-            
-            raise HTTPException(status_code=404, detail="Ticket not found")
-            
-        except HTTPException:
-            raise
-        except Exception as e:
-            logger.error(f"Fetch action error: {e}")
-            raise HTTPException(status_code=500, detail="Internal server error")
-
     @app.get("/health")
     async def health_check():
         """Health check endpoint."""
