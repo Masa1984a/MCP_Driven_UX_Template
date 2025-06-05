@@ -1,0 +1,89 @@
+# Cloud Run service configuration
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: mcp-server
+  labels:
+    app: mcp-server
+  annotations:
+    run.googleapis.com/client-name: "cloud-console"
+    run.googleapis.com/description: "MCP Server with SSE support for ticket management"
+spec:
+  template:
+    metadata:
+      labels:
+        app: mcp-server
+      annotations:
+        autoscaling.knative.dev/minScale: "0"
+        autoscaling.knative.dev/maxScale: "10"
+        run.googleapis.com/cpu-throttling: "true"
+        run.googleapis.com/execution-environment: gen2
+    spec:
+      serviceAccountName: mcp-server-sa
+      containerConcurrency: 100
+      timeoutSeconds: 900  # 15 minutes for SSE connections
+      containers:
+      - name: mcp-server
+        image: gcr.io/PROJECT_ID/mcp-server:latest
+        ports:
+        - containerPort: 8080
+          name: http1
+        env:
+        - name: MCP_CLOUD_MODE
+          value: "true"
+        - name: MCP_HOST
+          value: "0.0.0.0"
+        - name: MCP_PORT
+          value: "8080"
+        - name: MCP_LOG_LEVEL
+          value: "INFO"
+        - name: MCP_AUTH_PROVIDER
+          value: "api_key"
+        - name: MCP_TRANSPORT_TYPE
+          value: "sse"
+        - name: MCP_CLOUD_RUN_TIMEOUT
+          value: "840"  # 14 minutes in seconds
+        - name: MCP_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: mcp-api-key
+              key: latest
+        - name: MCP_API_BASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: mcp-api-base-url
+              key: latest
+        resources:
+          limits:
+            cpu: "1"
+            memory: "512Mi"
+          requests:
+            cpu: "0.5"
+            memory: "256Mi"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 60
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        startupProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 30
+  traffic:
+  - percent: 100
+    latestRevision: true
